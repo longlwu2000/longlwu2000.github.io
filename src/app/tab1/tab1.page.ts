@@ -38,7 +38,7 @@ export class Tab1Page {
         id: 3,
         title: 'Messenger',
         icon: 'logo-facebook',
-        action: 'https://www.facebook.com/messages/t/100009100000000',
+        action: 'http://m.me/LongLwu2000',
         type: 'url',
         img: 'assets/icon/mess.png',
       },
