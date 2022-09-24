@@ -1,17 +1,40 @@
 <ion-header [translucent]="true">
   <ion-toolbar>
-    <ion-title>
-      Tab 1
-    </ion-title>
+    <ion-item>
+      <ion-avatar>
+        <img alt="logo" [src]="logo" />
+      </ion-avatar>
+      <ion-title>
+        Welcome
+      </ion-title>
+    </ion-item>
   </ion-toolbar>
 </ion-header>
 
 <ion-content [fullscreen]="true">
-  <ion-header collapse="condense">
-    <ion-toolbar>
-      <ion-title size="large">Tab 1</ion-title>
-    </ion-toolbar>
-  </ion-header>
+  <div class="container-photo-profile">
+    <div class="wall-paper">
+      <img alt="wallpaper" [src]="current_user.wallpaper" />
+    </div>
+    <ion-avatar class="avatar">
+      <img alt="avatar" [src]="current_user.avatar" />
+    </ion-avatar>
+  </div>
+  <div class="container-profile">
+    <h1>{{current_user.first_name}} {{current_user.last_name}}</h1>
+    <p>Studied at: Telecommunication University</p>
+    <p>Software Engineer at EZ Active VN</p>
+    <div class="container-icon-btn" *ngFor="let item of current_user.buttons">
+      <img class="icon-btn" [src]="item.img" />
+      <ion-button (click)="acction(item)">{{item.title}}</ion-button>
+    </div>
 
-  <app-explore-container name="Tab 1 page"></app-explore-container>
+    <div  class="terminal">
+      <pre >lhl generate love</pre>
+      <pre >lhl add love 4u</pre>
+      <pre >lhl love u so much 💕</pre>
+    </div>
+  </div>
+
+
 </ion-content>
