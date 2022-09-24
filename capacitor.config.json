@@ -1,0 +1,6 @@
+{
+	"appId": "io.ionic.starter",
+	"appName": "Mecard",
+	"webDir": "www",
+	"bundledWebRuntime": false
+}

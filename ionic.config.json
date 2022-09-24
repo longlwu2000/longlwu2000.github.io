@@ -1,0 +1,8 @@
+{
+  "name": "Mecard",
+  "integrations": {
+    "capacitor": {}
+  },
+  "type": "angular",
+  "id": "47fa4cb8"
+}
