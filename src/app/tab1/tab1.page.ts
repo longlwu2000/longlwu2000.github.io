@@ -1,3 +1,4 @@
+import { AlertLoadingService } from './../services/alert-loading.service';
 import { ButtonUser } from './../../model/btn';
 import { User } from './../../model/user';
 import { Component } from '@angular/core';
@@ -10,7 +11,7 @@ import { Component } from '@angular/core';
 export class Tab1Page {
   current_user: User = new User();
   logo = 'assets/icon/logo.png';
-  constructor() {
+  constructor(public alertLoading: AlertLoadingService) {
     this.current_user.avatar = 'assets/images/avatar.jpg';
     this.current_user.wallpaper = 'assets/images/wall.jpg';
     this.current_user.first_name = 'Lưu';
@@ -58,6 +59,22 @@ export class Tab1Page {
         type: 'url',
         img: 'assets/icon/zalo.png',
       },
+      {
+        id: 6,
+        title: 'Tiktok',
+        icon: 'logo-tiktok',
+        action: 'https://www.tiktok.com/@lwu.long',
+        type: 'url',
+        img: 'assets/icon/tiktok.png',
+      },
+      {
+        id: 7,
+        title: 'Email',
+        icon: 'logo-tiktok',
+        action: 'luuhoanglong508@gmail.com',
+        type: 'email',
+        img: 'assets/icon/gmail.png',
+      },
     ];
   }
   acction(button: ButtonUser) {
@@ -68,6 +85,8 @@ export class Tab1Page {
       case 'mobile':
         window.open('tel:' + button.action, '_self');
         break;
+      case 'email':
+        window.open('mailto:' + button.action, '_self');
     }
   }
 }

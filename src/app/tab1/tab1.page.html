@@ -13,10 +13,10 @@
 
 <ion-content [fullscreen]="true">
   <div class="container-photo-profile">
-    <div class="wall-paper">
-      <img alt="wallpaper" [src]="current_user.wallpaper" />
+    <div class="wall-paper" >
+      <img alt="wallpaper" [src]="current_user.wallpaper" (click)="alertLoading.popupImageOfTrainee(current_user.wallpaper)"/>
     </div>
-    <ion-avatar class="avatar">
+    <ion-avatar class="avatar" (click)="alertLoading.popupImageOfTrainee(current_user.avatar)">
       <img alt="avatar" [src]="current_user.avatar" />
     </ion-avatar>
   </div>
@@ -28,10 +28,10 @@
       <img class="icon-btn" [src]="item.img" />
       <ion-button shape="round" (click)="acction(item)">{{item.title}}</ion-button>
     </div>
-    <div  class="terminal">
-      <pre >lhl generate love</pre>
-      <pre >lhl add love 4u</pre>
-      <pre >lhl love u so much 💕</pre>
+    <div class="terminal">
+      <pre>lhl generate love</pre>
+      <pre>lhl add love 4u</pre>
+      <pre>lhl love u so much 💕</pre>
     </div>
   </div>
 

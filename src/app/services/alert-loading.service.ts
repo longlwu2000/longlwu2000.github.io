@@ -28,7 +28,7 @@ export class AlertLoadingService {
         },
       },
     ],
-    subHeader?,
+    subHeader?
   ) {
     const alert = await this.alertController.create({
       header,
@@ -41,6 +41,16 @@ export class AlertLoadingService {
     const { role } = await alert.onDidDismiss();
     this.roleMessage = `Dismissed with role: ${role}`;
     console.log(this.roleMessage);
+  }
+  async popupImageOfTrainee(link: string) {
+    if (link) {
+      const alert = await this.alertController.create({
+        message: '<img src="' + link + '">',
+        cssClass: 'popup-controller',
+      });
+
+      await alert.present();
+    }
   }
 
   async showLoading(
