@@ -14,9 +14,9 @@
 <ion-content [fullscreen]="true">
   <div class="container-photo-profile">
     <div class="wall-paper" >
-      <img alt="wallpaper" [src]="current_user.wallpaper" (click)="alertLoading.popupImageOfTrainee(current_user.wallpaper)"/>
+      <img alt="wallpaper" [src]="current_user.wallpaper" (click)="alertLoading.popupImage(current_user.wallpaper)"/>
     </div>
-    <ion-avatar class="avatar" (click)="alertLoading.popupImageOfTrainee(current_user.avatar)">
+    <ion-avatar class="avatar" (click)="alertLoading.popupImage(current_user.avatar)">
       <img alt="avatar" [src]="current_user.avatar" />
     </ion-avatar>
   </div>
@@ -25,7 +25,7 @@
     <p>Studied at: Telecommunication University</p>
     <p>Software Engineer at EZ Active VN</p>
     <div class="container-icon-btn" *ngFor="let item of current_user.buttons">
-      <img class="icon-btn" [src]="item.img" />
+      <img class="icon-btn" [src]="item.icon" />
       <ion-button shape="round" (click)="acction(item)">{{item.title}}</ion-button>
     </div>
     <div class="terminal">

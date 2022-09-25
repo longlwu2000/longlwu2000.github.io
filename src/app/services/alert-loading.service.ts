@@ -42,9 +42,11 @@ export class AlertLoadingService {
     this.roleMessage = `Dismissed with role: ${role}`;
     console.log(this.roleMessage);
   }
-  async popupImageOfTrainee(link: string) {
+  async popupImage(link: string,header?:string,subHeader?:string) {
     if (link) {
       const alert = await this.alertController.create({
+        header,
+        subHeader,
         message: '<img src="' + link + '">',
         cssClass: 'popup-controller',
       });

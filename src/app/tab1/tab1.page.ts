@@ -22,58 +22,66 @@ export class Tab1Page {
       {
         id: 1,
         title: 'Call Me',
-        icon: 'call',
+        img: '',
         action: '0869145377',
         type: 'mobile',
-        img: 'assets/icon/phone.png',
+        icon: 'assets/icon/phone.png',
       },
       {
         id: 2,
         title: 'Facebook',
-        icon: 'logo-facebook',
+        img: '',
         action: 'https://www.facebook.com/LongLwu2000',
         type: 'url',
-        img: 'assets/icon/fb.png',
+        icon: 'assets/icon/fb.png',
       },
       {
         id: 3,
         title: 'Messenger',
-        icon: 'logo-facebook',
+        img: '',
         action: 'http://m.me/LongLwu2000',
         type: 'url',
-        img: 'assets/icon/mess.png',
+        icon: 'assets/icon/mess.png',
       },
       {
         id: 4,
         title: 'Instagram',
-        icon: 'logo-instagram',
+        img: '',
         action: 'https://www.instagram.com/_lluu_llong.508/',
         type: 'url',
-        img: 'assets/icon/insta.png',
+        icon: 'assets/icon/insta.png',
       },
       {
         id: 5,
         title: 'Zalo',
-        icon: 'logo-whatsapp',
+        img: '',
         action: 'https://zalo.me/0869145377',
         type: 'url',
-        img: 'assets/icon/zalo.png',
+        icon: 'assets/icon/zalo.png',
       },
       {
         id: 6,
         title: 'Tiktok',
-        icon: 'logo-tiktok',
+        img: '',
         action: 'https://www.tiktok.com/@lwu.long',
         type: 'url',
-        img: 'assets/icon/tiktok.png',
+        icon: 'assets/icon/tiktok.png',
       },
       {
         id: 7,
         title: 'Email',
-        icon: 'logo-tiktok',
+        img: '',
         action: 'luuhoanglong508@gmail.com',
         type: 'email',
-        img: 'assets/icon/gmail.png',
+        icon: 'assets/icon/gmail.png',
+      },
+      {
+        id: 8,
+        title: 'Banking',
+        img: '/assets/images/banking.jpg',
+        action: 'Lưu Hoàng Long',
+        type: 'banking',
+        icon: 'assets/icon/credit-card.png',
       },
     ];
   }
@@ -87,6 +95,11 @@ export class Tab1Page {
         break;
       case 'email':
         window.open('mailto:' + button.action, '_self');
+        break;
+      case 'banking':
+        this.alertLoading.popupImage(button.img,'Banking',button.action);
+        break;
+
     }
   }
 }
