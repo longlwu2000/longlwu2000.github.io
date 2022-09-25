@@ -1,5 +1,14 @@
 {
   "projects": {
-    "default": "luuhoanglong0508"
+    "default": "mecardvi"
+  },
+  "targets": {
+    "mecardvi": {
+      "hosting": {
+        "app": [
+          "mecardvi"
+        ]
+      }
+    }
   }
 }

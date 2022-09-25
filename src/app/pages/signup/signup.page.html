@@ -1,0 +1,42 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-title>signup</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content>
+
+  <div class="container-center">
+    <ion-card class="form">
+      <ion-avatar >
+        <img src="assets/icon/logo.png" />
+      </ion-avatar>
+      <ion-card-header>
+        <!-- <ion-card-subtitle>Card Subtitle</ion-card-subtitle> -->
+        <ion-card-title>Đăng ký</ion-card-title>
+        <!--avatar logo -->
+
+
+      </ion-card-header>
+
+      <ion-card-content>
+        <form [formGroup]="signupForm" (ngSubmit)="onSubmit()">
+          <ion-item>
+            <ion-label position="floating">Email</ion-label>
+            <ion-input type="text" formControlName="email"></ion-input>
+          </ion-item>
+          <ion-item>
+            <ion-label position="floating">Password</ion-label>
+            <ion-input type="password" formControlName="password"></ion-input>
+          </ion-item>
+          <ion-button id="btn_signup" expand="block" type="submit">Sign Up</ion-button>
+        </form>
+        <ion-button id="btn_login" expand="block" color="secondary" [routerLink]="['/login']">
+          Login
+        </ion-button>
+      </ion-card-content>
+    </ion-card>
+
+
+  </div>
+</ion-content>

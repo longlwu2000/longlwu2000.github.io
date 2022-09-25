@@ -26,9 +26,8 @@
     <p>Software Engineer at EZ Active VN</p>
     <div class="container-icon-btn" *ngFor="let item of current_user.buttons">
       <img class="icon-btn" [src]="item.img" />
-      <ion-button (click)="acction(item)">{{item.title}}</ion-button>
+      <ion-button shape="round" (click)="acction(item)">{{item.title}}</ion-button>
     </div>
-
     <div  class="terminal">
       <pre >lhl generate love</pre>
       <pre >lhl add love 4u</pre>

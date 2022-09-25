@@ -1,7 +1,7 @@
 import { ButtonUser } from './btn';
 export class User
 {
-    id: number;
+    id: string;
     email: string;
     password: string;
     role: number;
