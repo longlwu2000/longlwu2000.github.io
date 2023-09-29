@@ -18,6 +18,7 @@
         console.log('close modal');
         setTimeout(() => {
             window.parent.postMessage({ data: { close: true } });
+            console.log('closed');
         }, 5000);
     }); 
 </script>
