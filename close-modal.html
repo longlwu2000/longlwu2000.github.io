@@ -17,6 +17,7 @@
     $(document).ready(function () {
         console.log('close modal');
         setTimeout(() => {
+            console.log('in 1s');
             console.log('parent:',window.parent);
             window.parent.parent.postMessage({
                 'message': 'close-modal'
