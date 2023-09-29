@@ -17,9 +17,12 @@
     $(document).ready(function () {
         console.log('close modal');
         setTimeout(() => {
-            window.parent.postMessage({ data: { close: true } });
+            console.log('parent:',window.parent);
+            window.parent.parent.postMessage({
+                'message': 'close-modal'
+            }, '*');
             console.log('closed');
-        }, 5000);
+        }, 1000);
     }); 
 </script>
 
