@@ -14,7 +14,10 @@
     Close modal HKFA
 </body>
 <script>
-    $(document).ready(function () { window.parent.postMessage({ data: { close: true } }); }); 
+    $(document).ready(function () {
+        console.log('close modal');
+        window.parent.postMessage({ data: { close: true } });
+    }); 
 </script>
 
 </html>
