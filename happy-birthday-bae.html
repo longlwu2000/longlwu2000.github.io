@@ -1,0 +1,886 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Happy Birth Day My Love❤️</title>
+    <!-- add icon -->
+    <link rel="icon" href="images/icon.png" type="image/icon type">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@500&display=swap" rel="stylesheet">
+    <!-- import jquery -->
+    <script src="https://code.jquery.com/jquery-3.6.0.js"
+        integrity="sha256-H+K7U5CnXl1h5ywQfKtSj8PCmoN9aaq30gDh27Xc0jk=" crossorigin="anonymous">
+        </script>
+
+    <!-- import https://cdnjs.cloudflare.com/ajax/libs/gsap/3.4.2/gsap.min.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.4.2/gsap.min.js"></script>
+    <style>
+        @import url(https://fonts.googleapis.com/css?family=Allan:700,400);
+
+        p {
+            margin: 0.5rem;
+        }
+
+        body,
+        html {
+            width: 100%;
+            height: 100%;
+        }
+
+        body {
+            margin: 0;
+            background-color: mistyrose;
+            position: relative;
+            perspective: 800px;
+            overflow: hidden;
+        }
+
+        .envelope {
+            z-index: 2;
+            position: absolute;
+            width: 550px;
+            height: 366.66667px;
+            top: 50%;
+            left: 50%;
+            margin-top: -183.33333px;
+            margin-left: -275px;
+            transform-style: preserve-3d;
+            transform-origin: right center;
+            transition: transform 1s ease;
+            font-family: "Allan", sans-serif;
+            color: #1f1f1f;
+        }
+
+        .envelope .front,
+        .envelope .back {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background-color: #fff;
+            border-radius: 5px;
+            box-shadow: 0 0 30px -5px #fbc0b9 eb;
+        }
+
+        .envelope .front {
+            backface-visibility: hidden;
+            cursor: pointer;
+            display: table;
+        }
+
+        .envelope .front:focus {
+            outline: none;
+        }
+
+        .envelope .front .stamp {
+            transform: translate3d(0, 0, 1px);
+            position: absolute;
+            width: 80px;
+            height: 80px;
+            right: 10px;
+            top: 10px;
+            padding: 10px;
+            background: radial-gradient(rgba(0, 0, 0, 0) 0px, rgba(0, 0, 0, 0) 4px, #f6f6df 4px, #f6f6df);
+            background-size: 20px 20px;
+            background-position: -10px -10px;
+        }
+
+        .envelope .front .stamp:after {
+            content: "";
+            display: block;
+            width: 100%;
+            height: 100%;
+            background-color: #fff;
+            border-radius: 2px;
+        }
+
+        .envelope .front .mail {
+            text-align: center;
+            display: table-cell;
+            vertical-align: middle;
+        }
+
+        .envelope .front .mail p {
+            font-weight: bold;
+            margin: 0;
+        }
+
+        .envelope .back .letter p {
+            font-size: 23px;
+            font-family: 'Dancing Script', cursive;
+            letter-spacing: 2px;
+            color: #ff969f;
+        }
+
+        .envelope .front .mail p:first-child {
+            font-size: 50px;
+            line-height: 50px;
+            color: #ff969f;
+        }
+
+        .envelope .front .mail p:last-child {
+            font-size: 30px;
+        }
+
+        /* .envelope .back .letter p:nth-child(2) {
+            font-size: 30px;
+            color: black;
+        } */
+
+        /* .envelope .back .letter p:nth-child(3) {
+            font-size: 30px;
+            color: #f57882;
+            margin-top: 150px;
+            float: right;
+        } */
+
+        .envelope .back {
+            transform: rotateY(180deg) translate3d(0, 0, 1px);
+        }
+
+        .envelope .back .flip {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+        }
+
+        .envelope .back .flip:before {
+            content: "";
+            position: absolute;
+            background-color: #fff;
+            box-shadow: 0px 0px 100px #f5c1bc 52;
+        }
+
+        .envelope .back .top-flip:before,
+        .envelope .back .bottom-flip:before {
+            width: 388.90873px;
+            height: 388.90873px;
+        }
+
+        .envelope .back .top-flip {
+            z-index: 5;
+            transform-origin: top center;
+        }
+
+        .envelope .back .top-flip:before {
+            transform-origin: top left;
+            transform: rotate(-45deg);
+            border-bottom-left-radius: 50px;
+            border-top-left-radius: 10px;
+            border-bottom-right-radius: 10px;
+        }
+
+        .envelope .back .bottom-flip {
+            z-index: 4;
+        }
+
+        .envelope .back .bottom-flip:before {
+            transform-origin: left bottom;
+            transform: rotate(45deg) translate(-15px, -15px);
+            border-top-left-radius: 100px;
+            border-bottom-left-radius: 10px;
+            border-top-right-radius: 10px;
+        }
+
+        .envelope .back .left-flip:before,
+        .envelope .back .right-flip:before {
+            width: 269.27249px;
+            height: 269.27249px;
+            top: -5px;
+        }
+
+        .envelope .back .left-flip {
+            z-index: 3;
+        }
+
+        .envelope .back .left-flip:before {
+            transform-origin: top left;
+            transform: rotate(45deg);
+            border-top-left-radius: 20px;
+            border-bottom-right-radius: 30px;
+            border-top-right-radius: 5px;
+        }
+
+        .envelope .back .right-flip {
+            z-index: 2;
+        }
+
+        .envelope .back .right-flip:before {
+            right: 0;
+            transform-origin: top right;
+            transform: rotate(-45deg);
+            border-top-right-radius: 20px;
+            border-bottom-left-radius: 30px;
+            border-top-left-radius: 5px;
+        }
+
+        .envelope .back .letter {
+            z-index: 1;
+            position: absolute;
+            top: 5px;
+            left: 10px;
+            width: 530px;
+            height: 346.66667px;
+            background-color: #fff;
+            border-radius: 5px;
+            padding: 0 30px;
+            box-sizing: border-box;
+            box-shadow: 0px 1px 100px #fbc0b9 eb;
+        }
+
+        .envelope .back .letter div {
+            position: relative;
+            margin-top: 25px;
+        }
+
+        .envelope .back .letter label {
+            position: absolute;
+            font-size: 16px;
+            line-height: 20px;
+            opacity: 0;
+            top: -15px;
+            transition: all 0.1s linear;
+            color: #adadad;
+        }
+
+        .envelope .back .letter label.show {
+            opacity: 1;
+            top: -18px;
+        }
+
+        .envelope .back .letter label.focus {
+            color: inherit;
+        }
+
+        .envelope .back .letter ::placeholder {
+            color: #adadad;
+        }
+
+        .envelope .back .letter input[type='text'],
+        .envelope .back .letter textarea {
+            border: none;
+            box-sizing: border-box;
+            width: 100%;
+            padding: 5px;
+            margin: 0;
+            background-color: #f6f6df;
+        }
+
+        .envelope .back .letter input:focus,
+        .envelope .back .letter textarea:focus {
+            outline: none;
+        }
+
+        .envelope .back .letter input,
+        .envelope .back .letter textarea {
+            font-family: "Allan", sans-serif;
+            font-size: 20px;
+        }
+
+        .envelope .back .letter input[type='text'] {
+            height: 33px;
+        }
+
+        .envelope .back .letter input[type='submit'] {
+            font-weight: bold;
+            cursor: pointer;
+            border: none;
+            border-radius: 2px;
+            padding: 5px 20px;
+            background-color: #e7e1bc;
+            margin: 0;
+            transition: all 0.1s linear;
+        }
+
+        .envelope .back .letter input[type='submit']:hover {
+            background-color: #dcd0aa;
+        }
+
+        .envelope .back .letter textarea {
+            resize: none;
+            height: 117.66667px;
+        }
+
+        .envelope.new {
+            animation: new 1s forwards;
+        }
+
+        .envelope.open {
+            animation: open 3s forwards;
+        }
+
+        .envelope.open .top-flip {
+            animation: flip-open 1s 1s forwards;
+        }
+
+        .envelope.open .letter {
+            animation: letter-out 1s 2s forwards;
+        }
+
+        .envelope.send {
+            animation: send 4s forwards;
+        }
+
+        .envelope.send .top-flip {
+            transform: rotateX(-180deg);
+            z-index: -1;
+            animation: flip-close 1s 1s forwards;
+        }
+
+        .envelope.send .letter {
+            animation: letter-in 1s forwards;
+        }
+
+        @keyframes new {
+            0% {
+                left: 0%;
+                margin-left: -550px;
+            }
+
+            100% {
+                left: 50%;
+                margin-left: -275px;
+            }
+        }
+
+        @keyframes open {
+            0% {
+                transform: translate3d(0, 0, 0) rotateY(0);
+            }
+
+            33.333% {
+                transform: translate3d(-100%, 0, 0) rotateY(-180deg);
+            }
+
+            66.666% {
+                transform: translate3d(-100%, 0, 0) rotateY(-180deg);
+            }
+
+            100% {
+                transform: translate3d(-100%, 733.33333px, 0) rotateY(-180deg);
+            }
+        }
+
+        @keyframes flip-open {
+            0% {
+                transform: rotateX(0deg);
+                z-index: 5;
+            }
+
+            50% {
+                transform: rotateX(0deg);
+                z-index: 5;
+            }
+
+            100% {
+                transform: rotateX(-180deg);
+                z-index: -1;
+            }
+        }
+
+        @keyframes letter-out {
+            0% {
+                transform: translate3d(0, 0, 0);
+                box-shadow: 0 0px 30px -5px #fbc0b9 eb;
+            }
+
+            100% {
+                transform: translate3d(0, -733.33333px, 0);
+                box-shadow: 0 0px 30px -5px #fbc0b9 eb;
+            }
+        }
+
+        @keyframes send {
+            0% {
+                transform: translate3d(-100%, 733.33333px, 0) rotateY(-180deg);
+                left: 50%;
+                margin-left: -275px;
+            }
+
+            25% {
+                transform: translate3d(-100%, 0, 0) rotateY(-180deg);
+                left: 50%;
+                margin-left: -275px;
+            }
+
+            50% {
+                transform: translate3d(-100%, 0, 0) rotateY(-180deg);
+                left: 50%;
+                margin-left: -275px;
+            }
+
+            75% {
+                transform: translate3d(0, 0, 0) rotateY(0deg);
+                left: 50%;
+                margin-left: -275px;
+            }
+
+            100% {
+                transform: translate3d(0, 0, 0) rotateY(0deg);
+                left: 100%;
+                margin-left: 20px;
+            }
+        }
+
+        @keyframes flip-close {
+            0% {
+                transform: rotateX(-180deg);
+                z-index: -1;
+            }
+
+            50% {
+                transform: rotateX(0deg);
+                z-index: 5;
+            }
+
+            100% {
+                transform: rotateX(0deg);
+                z-index: 5;
+            }
+        }
+
+        @keyframes letter-in {
+            0% {
+                transform: translate3d(0, -733.33333px, 0);
+                box-shadow: inset 0 0px 30px -5px #a87e50, 0 0 20px -5px;
+            }
+
+            100% {
+                transform: translate3d(0, 0, 0);
+                box-shadow: inset 0 0px 30px -5px #b08c5b, 0 0 10px -5px;
+            }
+        }
+
+
+        /* cake */
+        @import url('https://fonts.googleapis.com/css2?family=Cookie&family=Rouge+Script&display=swap');
+
+        *,
+        *:before,
+        *:after {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        .svg {
+            position: absolute;
+            width: 0;
+            height: 0;
+        }
+
+        .wrapper,
+        .plate,
+        .candle-container {
+            display: grid;
+            place-items: center;
+        }
+
+        .wrapper {
+            position: relative;
+            height: 100vh;
+            min-height: 600px;
+            background: linear-gradient(to top, #eee, transparent);
+        }
+
+        .greeting {
+            font-family: 'Cookie', cursive;
+            font-size: 4rem;
+            color: #444;
+            transform: scale(0);
+        }
+
+        .message {
+            font-family: 'Cookie', cursive;
+            font-size: 2.5rem;
+            color: #777;
+        }
+
+        .plate {
+            position: relative;
+            width: 250px;
+            height: 75px;
+            background: #f1f1f1;
+            margin-top: 0;
+            border-radius: 50%;
+            box-shadow: 0px 3px 5px 0px #aaa;
+        }
+
+        .cake-wrap {
+            position: absolute;
+            bottom: 50%;
+        }
+
+        .cake-base {
+            position: relative;
+            width: 200px;
+            height: 50px;
+            background: #c5a5c0;
+        }
+
+        .cake-base .base-front {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background: inherit;
+        }
+
+        .cake-base .base-front:after {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 100%;
+            width: 100%;
+            height: 55px;
+            transform: translatey(-50%);
+            background: inherit;
+            border-radius: 50%;
+        }
+
+        .cake-base .base-top {
+            position: absolute;
+            width: 100%;
+            height: 65px;
+            top: 0;
+            transform: translatey(-50%);
+            border-radius: 50%;
+            background: inherit;
+        }
+
+        .cake-base .base-top:before {
+            content: '';
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            clip-path: polygon(0 0, 0% 50%, 100% 50%, 100% 0);
+        }
+
+        .cake-base .base-top:after {
+            content: '';
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            border-bottom-color: black;
+            clip-path: polygon(0 50%, 60% 50%, 60% 101%, 0 101%);
+        }
+
+        .cake-topping {
+            position: absolute;
+            bottom: 0%;
+            width: 200px;
+            height: 100px;
+            z-index: 99;
+        }
+
+        .cake-topping .topping-front {
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(to bottom, #b381ae 40%, transparent);
+        }
+
+        .cake-topping .topping-front .top-layer {
+            height: 30%;
+            background: #b381ae;
+        }
+
+        .cake-topping .topping-front .bottom-layer {
+            position: relative;
+            height: 70%;
+            background: #b381ae;
+            clip-path: url('#my-clip-path');
+        }
+
+        .cake-topping .topping-top {
+            background: #b381ae;
+            position: absolute;
+            width: 100%;
+            height: 65px;
+            top: 0;
+            transform: translatey(-50%);
+            border-radius: 50%;
+            z-index: 9;
+        }
+
+        .cake-topping .topping-top:before {
+            content: '';
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            clip-path: polygon(0 0, 0% 50%, 100% 50%, 100% 0);
+        }
+
+        .cake-topping .topping-top:after {
+            content: '';
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            box-shadow: inset 0 -1px 1px 2px rgba(200, 169, 195, 0.5);
+            clip-path: polygon(10% 50%, 70% 50%, 70% 101%, 10% 101%);
+        }
+
+        .candle-container {
+            width: 200px;
+            position: absolute;
+            bottom: 60%;
+            z-index: 9999;
+            opacity: 0;
+        }
+
+        .candle-container .candle-wrap {
+            position: relative;
+            width: 15px;
+        }
+
+        .candle-container .flame-wrap {
+            position: relative;
+            z-index: 99;
+            width: 100%;
+            background: #fcc56c;
+            height: 30px;
+            transform-origin: bottom center;
+            transform: scale(0);
+            clip-path: url(#my-flame-path);
+        }
+
+        .candle-container .candle-top {
+            position: absolute;
+            top: 0;
+            left: 0;
+            transform: translatey(-50%);
+            width: 100%;
+            height: 8px;
+            background: white;
+            border-radius: 50%;
+            z-index: 9;
+            background: radial-gradient(#eee, #f0abf0);
+        }
+
+        .candle-container .candle-base {
+            position: relative;
+            width: 100%;
+            height: 75px;
+            margin: 2px 0;
+            background: repeating-linear-gradient(45deg, #eee, #f0abf0 20%);
+        }
+
+        .candle-container .candle-base:before {
+            content: '';
+            position: absolute;
+            left: 0;
+            bottom: 0;
+            background: #eee;
+            transform: translateY(50%);
+            height: 5px;
+            width: 100%;
+            z-index: -1;
+            border-radius: 50%;
+        }
+
+        .candle-container .candle-base:after {
+            content: '';
+            position: absolute;
+            left: 50%;
+            bottom: 0;
+            transform: translate(-50%, 50%);
+            height: 10px;
+            width: 200%;
+            border-radius: 50%;
+            background: radial-gradient(#9e7199, #b381ae);
+            z-index: -2;
+        }
+
+        .candle-container .star {
+            width: 15px;
+            height: 15px;
+            position: absolute;
+            background-color: orange;
+            clip-path: url(#my-star-path);
+            opacity: 0;
+        }
+
+        .candle-container .star:nth-of-type(1) {
+            top: -20%;
+            left: 30%;
+        }
+
+        .candle-container .star:nth-of-type(2) {
+            top: 30%;
+            left: 10%;
+        }
+
+        .candle-container .star:nth-of-type(3) {
+            top: -10%;
+            left: 85%;
+        }
+
+        .candle-container .star:nth-of-type(4) {
+            top: 35%;
+            left: 65%;
+        }
+
+        .candle-container .star:nth-of-type(5) {
+            top: 55%;
+            left: 90%;
+        }
+    </style>
+</head>
+
+<body>
+    <audio src="music/hbd.mp3" id="my_audio" loop="loop" autoplay="autoplay"></audio>
+    <div id="cake">
+        <div class="wrapper">
+            <div class="greeting" style=" text-align: right;">
+                Happy Birthday
+                <br>
+                <span id="clickHere" style="font-size: 30px;">CLick here</span>
+            </div>
+            <div class="plate">
+                <div class="cake-wrap">
+                    <div class="cake-topping">
+                        <div class="topping-top">
+                            <div class="candle-container">
+                                <div class="star"></div>
+                                <div class="star"></div>
+                                <div class="star"></div>
+                                <div class="star"></div>
+                                <div class="star"></div>
+                                <div class="candle-wrap">
+                                    <div class="flame-wrap"></div>
+                                    <div class="candle-base">
+                                        <div class="candle-top"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="topping-front">
+                            <div class="top-layer"></div>
+                            <div class="bottom-layer"></div>
+                        </div>
+                    </div>
+                    <div class="cake-base">
+                        <div class="base-front"></div>
+                        <div class="base-top"></div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+        <svg class="svg">
+            <clipPath id="my-clip-path" clipPathUnits="objectBoundingBox">
+                <path
+                    d="M0,0 V0.481 s0.021,0.37,0.078,0.404 s0.035,-0.296,0.102,-0.27 s0.007,0.363,0.096,0.354 s0.028,-0.466,0.1,-0.487 S0.406,0.999,0.457,0.999 s0.03,-0.502,0.075,-0.518 s0.041,0.488,0.081,0.274 c0.007,-0.038,0.021,-0.187,0.044,-0.215 c0.014,-0.017,0.038,0.401,0.075,0.392 s0.023,-0.28,0.074,-0.392 c0.022,-0.04,0.072,0.359,0.1,0.344 c0.057,-0.029,0.094,-0.405,0.094,-0.405 V-0.001">
+                </path>
+            </clipPath>
+            <clipPath id="my-flame-path" clipPathUnits="objectBoundingBox">
+                <path
+                    d="M0.501,0 s0.188,0.101,0.295,0.238 s0.123,0.15,0.169,0.286 S1,0.74,0.928,0.838 S0.711,1,0.501,1 S0.216,0.937,0.09,0.838 s-0.083,-0.149,0,-0.29 s0.23,-0.139,0.333,-0.276 S0.501,0,0.501,0">
+                </path>
+            </clipPath>
+            <clipPath id="my-star-path" clipPathUnits="objectBoundingBox">
+                <path
+                    d="M0.5,0.846 l-0.309,0.154,0.044,-0.357 L0,0.382 l0.336,-0.067 L0.5,0 l0.164,0.315,0.336,0.067,-0.235,0.261,0.044,0.357">
+                </path>
+            </clipPath>
+        </svg>
+    </div>
+    <div class="envelope new" style="display: none;">
+        <div class="front">
+            <div class="mail">
+                <p>Happy Birthday</p>
+                <p>Click me</p>
+            </div>
+        </div>
+        <div class="back">
+            <div class="letter">
+                <p>Hey Bae💝,</p>
+                <p>Anh chúc những điều tốt đẹp nhất sẽ luôn đến với em! Hãy
+                    luôn xinh đẹp, vui tươi và hạnh phúc bên những người em yêu thương! </p>
+                <p>Chúc cho chúng ta những ngày sau này sẽ luôn có "Chúng ta"... I ❤️ U ...Moah 😘</p>
+                <p style="color:red">Happy Birthday My Girl!🎂🎉</p>
+                <div style="text-align: right;">
+                    <div>
+                        <p>Your Fiancé</p>
+                        <p style="margin-right: 50px;">Long</p>
+                    </div>
+                </div>
+            </div>
+            <div class="flip left-flip"></div>
+            <div class="flip right-flip"></div>
+            <div class="flip bottom-flip"></div>
+            <div class="flip top-flip"></div>
+        </div>
+    </div>
+
+
+    <script>
+        $(function () {
+            if (!$('.envelope').hasClass('open')) {
+                console.log('not open');
+                $('.envelope').click(function () {
+                    $(this).removeClass('new').addClass('open');
+                });
+            }
+
+            $('#clickHere').click(function () {
+                document.getElementById("my_audio").play();
+
+                //    show envelope
+                $('.envelope').css('display', 'block');
+                //    hide cake
+                $('#cake').css('display', 'none');
+
+            });
+
+            const timeline = gsap.timeline({
+                duration: 0.3,
+            });
+
+            timeline.fromTo('.cake-topping', {
+                yPercent: -300,
+                opacity: 0.5
+            }, {
+                yPercent: 0,
+                opacity: 1
+            });
+
+            timeline.to('.candle-container', {
+                opacity: 1
+            });
+
+            timeline.to('.flame-wrap', {
+                scale: 1,
+                ease: "back.out",
+            })
+
+            timeline.to('.greeting', {
+                scale: 1,
+                ease: "back.out"
+            })
+
+            timeline.to('.star', {
+                opacity: 0.5,
+                stagger: 0.05,
+                onComplete: function () {
+                    gsap.to('.star', {
+                        scale: 0.25,
+                        repeat: -1,
+                        stagger: 0.1,
+                        yoyo: true,
+                        yoyoEase: "power1.out"
+                    })
+                }
+            })
+
+        });
+    </script>
+</body>
+
+</html>
