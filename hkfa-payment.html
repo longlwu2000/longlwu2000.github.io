@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Payment</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM"
+        crossorigin="anonymous"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+    <link rel="stylesheet" href="public/css/styles.css">
+
+</head>
+
+<body>
+    <header class="sticky-top bg-primary">
+        <h2>Payment</h2>
+        <div>
+            <h6 id="timer"></h6>
+        </div>
+    </header>
+
+
+    <div class="content p2" id="duplicate">
+        <div class="retangle"></div>
+        <div class="p-2 noti-message">
+            <h4 class="mb-0 text-1 text-start">
+                Duplicate connection detected. Please close this window.
+            </h4>
+        </div>
+    </div>
+    <div class="justify-content-center align-items-center" id="loading" style="height: 80vh; display:flex">
+        <img src="public/images/gifs/loading.gif" class="mt-3 img-fluid waiting-icon">
+    </div>
+
+    <div class="content" id="wait">
+        <div class="retangle"></div>
+        <div class="text-center p-2">
+            <img src="public/images/gifs/waiting.gif" class="mt-3 img-fluid waiting-icon">
+            <h3 class="text-muted">PLEASE WAIT</h3>
+            <p class="text-muted my-3 text-1">
+                We have a large number of users. This queue is to ensure your checkout experience is
+                smooth and no problem
+            </p>
+            <h6 class="mb-3">Your estimated wait is about <span class="text-primary fw-bold" id="wait-timer"></span>
+            </h6>
+            <h6 class="my-1">Your number in line</h6>
+            <p class="pos-number mt-3 text-primary" id="index"></p>
+            <p class="text-muted my-3 text-1" id="last-updated">
+                Last updated: <span id="last-updated-time"></span>
+            </p>
+            <div class="px-3">
+                <div class="progress">
+                    <div class="progress-bar bg-primary" id="progress" role="progressbar"></div>
+                </div>
+            </div>
+            <div>
+                {{!-- <p class="text-muted text-start my-3 text-1">
+                    Would you like to receive notifications when it's your turn via Email?
+                </p> --}}
+                <div class="d-flex justify-content-center gap-2 mb-3 mt-5">
+                    <div class="d-flex w-100 px-2 justify-content-center align-items-center" style="gap:10px">
+                        <label for="email">Email:</label>
+                        <input type="email" class="form-control" readonly name="email" id="email"
+                            aria-describedby="helpId" value="{{email}}">
+                    </div>
+                    {{!-- <button class="btn btn-primary p-1 text-1">Notify me</button> --}}
+                </div>
+            </div>
+            <div class="p-2 noti-message">
+                <p class="mb-0 text-1 text-start">
+                    We will email you when it's your turn. You have 15 minutes to pay from the moment you receive the
+                    Email</p>
+            </div>
+
+        </div>
+    </div>
+
+    <div id="payment">
+    </div>
+
+    <script src="https://cdn.socket.io/4.0.1/socket.io.min.js"></script>
+    <script>
+        var is_granted = false;
+        var time, waittime, index;
+        var intervalWait, interval;
+        var init_payment = false;
+        var invoice_id = '';
+        var queryParams;
+        var is_connected = false;
+        var no_reconnect = 0;
+        var env = 'development'; // production | development
+        var env_params = {
+            production: {
+                socketUrl: 'https://www.ezactive.com',
+                path: '/hkfa_websocket',
+            },
+            development: {
+                socketUrl: 'http://localhost:3000',
+                path: '',
+            },
+        };
+        const socket = io(env_params[env].socketUrl, {
+            path: `${env_params[env].path}/socket.io`,
+        });
+        socket.on('connect', () => {
+            is_connected = true;
+            if (no_reconnect > 0) {
+                console.log('Reconnected to server', no_reconnect);
+                joinQueue();
+            }
+            no_reconnect++;
+            console.log('Connected to server');
+        });
+
+        socket.io.on('error', (error) => {
+            console.log('error', error);
+        });
+
+        socket.io.on('ping', () => {
+            console.log('ping');
+        });
+
+        socket.on('reconnect', (attempt) => {
+            is_connected = true;
+            console.log('Reconnected to server', attempt);
+            joinQueue();
+        });
+
+        socket.on('reconnect_error', () => {
+            is_connected = false;
+            console.log('Reconnect error');
+        });
+
+        socket.on('reconnect_failed', () => {
+            is_connected = false;
+            console.log('Reconnect failed');
+        });
+
+        socket.on('disconnect', () => {
+            is_connected = false;
+            console.log('Disconnected from server');
+        });
+
+        socket.on('duplicateConnection', () => {
+            console.log('Duplicate connection');
+            socket.disconnect();
+            // remove payment iframe
+            $('#payment').remove();
+            $('#duplicate').show();
+            setTimeout(() => {
+                console.log('close window');
+                window.close();
+            }, 2000);
+        });
+
+        // on check_access
+        socket.on('check_access', (data) => {
+            console.log('check_access', data);
+            let last_upadted = new Date();
+            console.log('last_upadted', last_upadted.toTimeString());
+            // set to el last-updated-time
+            $('#last-updated-time').text(last_upadted.toTimeString());
+            if (data.isGranted) {
+                is_granted = true;
+                startTimer(data);
+            } else {
+                is_granted = false;
+                if (init_payment) {
+                    if (data.isPaid) {
+                        paymentSuccess();
+                    } else {
+                        paymentTineUp();
+                    }
+                    $('#payment').hide();
+                }
+                startWaitTimer(data);
+            }
+        });
+
+        // on userLeftQueue
+        socket.on('userLeftQueue', (data) => {
+            console.log('userLeftQueue', data);
+            if (
+                data.remaningTime &&
+                data.remaningTime > 0 &&
+                waittime >= data.remaningTime &&
+                data.maxUsersAllowed
+            ) {
+                if (index > data.maxUsersAllowed) {
+                    waittime -= data.remaningTime;
+                }
+            }
+            index--;
+            setIndex(index);
+        });
+
+        function joinQueue() {
+            console.log('joinQueue', `HKFA-${invoice_id}`);
+            join('payment', `HKFA-${invoice_id}`);
+        }
+
+        function join(roomName, token) {
+            socket.emit('joinRoom', { roomName, token }, (data) => {
+                console.log(data);
+            });
+        }
+
+        function initPayment() {
+            init_payment = true;
+            let url_payment = queryParams.get('url');
+            console.log('url_payment', url_payment);
+            console.log('Payment granted');
+            // create iframe
+            let iframe = document.createElement('iframe');
+            iframe.src = url_payment;
+            iframe.classList.add('payment-iframe');
+
+            iframe.onload = () => {
+                console.log('iframe loaded');
+            };
+
+            iframe.onerror = () => {
+                console.log('iframe error');
+            };
+
+            $('#payment').append(iframe);
+            $('#payment').show();
+            $('#loading').hide();
+            $('#wait').hide();
+        }
+
+        function getTimer() {
+            return `${Math.floor(this.time / 60000)}:${Math.floor(
+                (this.time % 60000) / 1000,
+            )}`;
+        }
+
+        function getWaitTimer() {
+            let minutes = Math.floor(this.waittime / 60000);
+            let seconds = Math.floor((this.waittime % 60000) / 1000);
+            // if (minutes < 1) {
+            //   return `${seconds} seconds`;
+            // } else {
+            return `${minutes + 1} minutes`;
+            // }
+        }
+
+        function paymentTineUp() {
+            // go to time up page
+            console.log('Payment time up');
+            window.location.href = `${env_params[env].path}/time-up`;
+        }
+
+        function paymentSuccess() {
+            // go to success page
+            console.log('Payment success');
+            window.location.href = `${env_params[env].path}/success`;
+        }
+
+        function startTimer(data) {
+            time = data.time;
+            if (intervalWait) clearInterval(intervalWait);
+            if (time > 0) {
+                initPayment();
+                if (interval) clearInterval(interval);
+                interval = setInterval(() => {
+                    time -= 1000;
+                    if (time <= 0) {
+                        clearInterval(interval);
+                    }
+
+                    let timer = getTimer();
+                    $('#timer').text(timer);
+                }, 1000);
+            }
+        }
+
+        function startWaitTimer(data) {
+            $('#wait').show();
+            $('#loading').hide();
+            let maxTime = parseInt(data.waitTime);
+            waittime = maxTime;
+            index = data.index;
+            setIndex(index);
+            if (interval) clearInterval(interval);
+            if (waittime > 0) {
+                if (intervalWait) clearInterval(intervalWait);
+                intervalWait = setInterval(() => {
+                    waittime -= 1000;
+                    // console.log('waittime', waittime);
+                    if (waittime <= 0) {
+                        clearInterval(intervalWait);
+                    }
+
+                    let timer = getWaitTimer();
+                    setProgress(calcProgress(maxTime, waittime));
+                    $('#wait-timer').text(timer);
+                }, 1000);
+            }
+        }
+
+        function setIndex(index) {
+            let indexElement = document.getElementById('index');
+            if (indexElement) indexElement.innerText = index;
+        }
+
+        function setProgress(progress) {
+            let progressElement = document.getElementById('progress');
+            if (progressElement) progressElement.style.width = `${progress}%`;
+        }
+
+        function calcProgress(maxTime, currentTime) {
+            return (1 - currentTime / maxTime) * 100;
+        }
+
+        // on document ready
+        $(document).ready(function () {
+            // get url from query param
+            let full_url = new URL(window.location.href);
+            queryParams = full_url.searchParams;
+            console.log('queryParams', queryParams);
+            invoice_id = queryParams.get('invoice_id');
+            console.log('invoice_id', invoice_id);
+            $('#loading').show();
+            $('#wait').hide();
+            $('#payment').hide();
+            $('#duplicate').hide();
+            setTimeout(() => {
+                joinQueue();
+            }, 2000);
+        });
+
+    </script>
+</body>
+
+</html>
