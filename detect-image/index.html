@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>OCR Image Analyzer</title>
+    <link rel="stylesheet" href="styles.css" />
+    <!-- momentjs -->
+    <script src="/moment.js"></script>
+  </head>
+  <body>
+    <div class="main-container">
+      <div class="upload-container" id="dropZone">
+        <h2>Kéo thả hoặc chọn ảnh để phân tích</h2>
+        <input type="file" id="fileInput" multiple accept="image/*" style="display: none" />
+        <div class="upload-actions">
+          <button onclick="document.getElementById('fileInput').click()" class="upload-button">Chọn ảnh</button>
+          <button id="clearAllButton" class="upload-button warning" disabled>Xóa tất cả</button>
+        </div>
+        <div class="file-list" id="fileList"></div>
+
+        <div class="action-buttons">
+          <button id="analyzeButton" class="upload-button" disabled>Phân tích ảnh</button>
+
+          <button id="openReviewDataButton" class="upload-button secondary">Xem dữ liệu phân tích</button>
+        </div>
+
+        <div class="user-info">
+          <select id="userName" class="name-input">
+            <option value="">-- Chọn tên của bạn --</option>
+          </select>
+          <button id="createSalaryButton" class="upload-button" disabled>Tạo bảng lương</button>
+        </div>
+      </div>
+    </div>
+    <div id="results-container"></div>
+
+    <!-- Modal -->
+    <div id="review-data" class="modal">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h2 id="modal-title">Dữ liệu phân tích</h2>
+          <span class="close-modal">&times;</span>
+        </div>
+        <div class="modal-body">
+          <div id="modal-table-container"></div>
+        </div>
+        <div class="modal-footer">
+          <button class="upload-button" id="confirm-data">Xác nhận</button>
+          <button class="upload-button secondary" id="cancel-data">Hủy</button>
+        </div>
+      </div>
+    </div>
+    <script src="script.js"></script>
+  </body>
+</html>
