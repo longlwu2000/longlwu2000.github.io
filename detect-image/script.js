@@ -5,7 +5,8 @@ const selectedFiles = new Map();
 const defaultUserList = [];
 
 // Cấu hình API
-const API_ENDPOINT = "https://webvideo-caster-longlwu2000-bd6ce391.koyeb.app/analyze-image";
+const API_ENDPOINT =
+  "https://webvideo-caster-longlwu2000-bd6ce391.koyeb.app/analyze-image";
 const API_KEY = "AIzaSyBeo4NGA__U6Xxy-aBE6yFm19pgq8TY-TM";
 const ConfigTableIndex = {
   name: 1,
@@ -177,18 +178,17 @@ async function processAllImages() {
       tables.sort((a, b) => {
         const dateA = a[0][1] || a[0][0];
         const dateB = b[0][1] || b[0][0];
-        return moment(dateA, "DD-MM-YYYY").isBefore(moment(dateB, "DD-MM-YYYY")) ? -1 : 1;
+        return moment(dateA, "DD-MM-YYYY").isBefore(moment(dateB, "DD-MM-YYYY"))
+          ? -1
+          : 1;
       });
       resetModal();
       tables.forEach((table, index) => {
-        const splitData = splitDataByName(table);
+        const splitData = splitDataByName(structuredClone(table));
         const dateKey = table[0][1] || table[0][0];
-        const offset = table[0][1] ? 0 : -1;
-        moneyDatas = analyzeDataForMoney(splitData, dateKey, offset, moneyDatas);
-
         addTableToResults(table, dateKey);
+        moneyDatas = analyzeDataForMoney(splitData, dateKey, moneyDatas);
       });
-      console.log(moneyDatas);
       MoneyDatas = moneyDatas;
       updateUserSelect();
       return moneyDatas;
@@ -280,7 +280,7 @@ function analyzeAndDisplayTable(textAnnotations, fileId) {
           currentItem = { ...item };
         } else {
           const gap = item.x - (currentItem.x + currentItem.width);
-          if (gap <= 18) {
+          if (gap <= 15) {
             // Giảm ngưỡng gộp để tách các phần tử riêng biệt
             currentItem.text += item.text;
             currentItem.width = item.x + item.width - currentItem.x;
@@ -340,7 +340,9 @@ function analyzeAndDisplayTable(textAnnotations, fileId) {
   });
 
   // Lọc chỉ giữ lại các cột có dữ liệu
-  const activeColumns = columnPositions.filter((pos) => columnsWithData.has(pos));
+  const activeColumns = columnPositions.filter((pos) =>
+    columnsWithData.has(pos)
+  );
   // Tạo các dòng và lưu vào mảng table
   rows.forEach((rowItems) => {
     const tableRow = [];
@@ -441,13 +443,17 @@ function splitDataByName(table) {
   const dataByName = new Map();
 
   table.forEach((row, index) => {
-    const name = row[ConfigTableIndex.name]; // Giả sử tên nằm ở cột thứ 2
+    const name = /^\d+$/.test(row[0])
+      ? row[ConfigTableIndex.name]
+      : row[ConfigTableIndex.name - 1];
+    // console.log("sss", /^\d+$/.test(row[0]), row[0], name);
     if (name && index > 0 && name.toLowerCase() !== "name") {
       const trimName = name.trim();
       if (!dataByName.has(trimName)) {
         dataByName.set(trimName, []);
       }
-      dataByName.get(trimName).push(row);
+      const rowData = /^\d+$/.test(row[0]) ? row.splice(1) : row;
+      dataByName.get(trimName).push(rowData);
     }
   });
 
@@ -457,19 +463,21 @@ function splitDataByName(table) {
 // analyze data to get money in data (ví dụ: 50$ ( boss888 / huione ) + 50$ ( boss222 / inbill ) + 50$ ( boss222 / tm )
 // Chỉ lấy các giá trị đi kèm với ký tự $ (hoặc có thể là S)
 //Data truyền vào có kiểu dữ liệu như dataByName
-function analyzeDataForMoney(data, dataKey, offset, moneyDatas) {
+function analyzeDataForMoney(data, dataKey, moneyDatas) {
   const moneyData = moneyDatas ?? new Map();
   const parsedMoneyRegex = /(\d+(\.\d+)?\s*[$S])/g; // Regex để tìm tiền
 
   data.forEach((rows) => {
     rows.forEach((row) => {
-      const name = row[ConfigTableIndex.name + offset];
-      const money = row[ConfigTableIndex.money + offset];
-      const tip = row[ConfigTableIndex.tip + offset];
+      const name = row[ConfigTableIndex.name - 1];
+      const money = row[ConfigTableIndex.money - 1];
+      const tip = row[ConfigTableIndex.tip - 1];
       if (name && money) {
         const trimName = name.trim().toLowerCase();
         const moneyMatch = money.match(parsedMoneyRegex);
         const tipMatch = tip ? tip.match(parsedMoneyRegex) : [];
+        console.log("money", money);
+
         if (moneyMatch) {
           if (!moneyData.has(trimName)) {
             moneyData.set(trimName, []);
@@ -479,7 +487,24 @@ function analyzeDataForMoney(data, dataKey, offset, moneyDatas) {
             money: moneyMatch,
             tip: tipMatch || [],
             totalMoney: moneyMatch.reduce((sum, m) => sum + parseFloat(m), 0),
-            totalTip: tipMatch ? tipMatch.reduce((sum, t) => sum + parseFloat(t), 0) : 0,
+            totalTip: tipMatch
+              ? tipMatch.reduce((sum, t) => sum + parseFloat(t), 0)
+              : 0,
+            isDayOff: false,
+            message: "",
+          });
+        } else {
+          if (!moneyData.has(trimName)) {
+            moneyData.set(trimName, []);
+          }
+          moneyData.get(trimName).push({
+            dataKey: dataKey,
+            money: [],
+            tip: [],
+            totalMoney: 0,
+            totalTip: 0,
+            isDayOff: money.toLowerCase().includes("off"),
+            message: money,
           });
         }
       }
@@ -514,10 +539,20 @@ function createSalaryTable(moneyData, Name) {
           (item) => `
         <tr>
           <td>${item.dataKey}</td>
-          <td>${Math.round(item.totalMoney / 50)}</td>
-          <td>${item.totalMoney / 2}$ <span class="detail-data">(${item.totalMoney}$ /2  )</span></td>
-          <td>${item.totalTip / 2}$ <span class="detail-data">(${item.totalTip}$ /2  )</span></td>
-          <td>${item.totalTip / 2 + item.totalMoney / 2}$ <span class="detail-data">(${item.totalTip + item.totalMoney}$ /2  )</span></td>
+          <td>${
+            item.isDayOff ? item.message : Math.round(item.totalMoney / 50)
+          }</td>
+          <td>${item.totalMoney / 2}$ <span class="detail-data">(${
+            item.totalMoney
+          }$ /2  )</span></td>
+          <td>${item.totalTip / 2}$ <span class="detail-data">(${
+            item.totalTip
+          }$ /2  )</span></td>
+          <td>${
+            item.totalTip / 2 + item.totalMoney / 2
+          }$ <span class="detail-data">(${
+            item.totalTip + item.totalMoney
+          }$ /2  )</span></td>
         </tr>
       `
         )
@@ -525,9 +560,15 @@ function createSalaryTable(moneyData, Name) {
       <tr>
         <th>Tổng</th>
         <th>${Math.round(totalMoney / 50)}</th>
-        <th>${totalMoney / 2}$ <span class="detail-data">(${totalMoney}$ /2  )</span></th>
-        <th>${totalTip / 2}$ <span class="detail-data">(${totalTip}$ /2  )</span></th>
-        <th>${totalTip / 2 + totalMoney / 2}$ <span class="detail-data">(${totalTip + totalMoney}$ /2  )</span></th>
+        <th>${
+          totalMoney / 2
+        }$ <span class="detail-data">(${totalMoney}$ /2  )</span></th>
+        <th>${
+          totalTip / 2
+        }$ <span class="detail-data">(${totalTip}$ /2  )</span></th>
+        <th>${totalTip / 2 + totalMoney / 2}$ <span class="detail-data">(${
+    totalTip + totalMoney
+  }$ /2  )</span></th>
       </tr>
     </tbody>
   `;
@@ -554,7 +595,10 @@ document.addEventListener("DOMContentLoaded", () => {
   const createSalaryButton = document.getElementById("createSalaryButton");
   createSalaryButton.addEventListener("click", () => {
     // get user name
-    const userName = document.getElementById("userName").value.trim().toLowerCase();
+    const userName = document
+      .getElementById("userName")
+      .value.trim()
+      .toLowerCase();
     if (!userName) {
       alert("Vui lòng nhập tên của bạn");
       return;
