@@ -45,7 +45,6 @@ function setupDragAndDrop() {
   const createSalaryButton = document.getElementById("createSalaryButton");
   const userNameInput = document.getElementById("userName");
   const clearAllButton = document.getElementById("clearAllButton");
-
   // Xử lý sự kiện xóa tất cả
   clearAllButton.addEventListener("click", () => {
     if (confirm("Bạn có chắc chắn muốn xóa tất cả hình ảnh?")) {
@@ -515,26 +514,36 @@ function createSalaryTable(moneyData, Name) {
           (item) => `
         <tr>
           <td>${item.dataKey}</td>
-          <td>${item.totalMoney / 50}</td>
-          <td>${item.totalMoney / 2}</td>
-          <td>${item.totalTip / 2}</td>
-          <td>${item.totalTip / 2 + item.totalMoney / 2}</td>
+          <td>${Math.round(item.totalMoney / 50)}</td>
+          <td>${item.totalMoney / 2}$ <span class="detail-data">(${item.totalMoney}$ /2  )</span></td>
+          <td>${item.totalTip / 2}$ <span class="detail-data">(${item.totalTip}$ /2  )</span></td>
+          <td>${item.totalTip / 2 + item.totalMoney / 2}$ <span class="detail-data">(${item.totalTip + item.totalMoney}$ /2  )</span></td>
         </tr>
       `
         )
         .join("")}
       <tr>
         <th>Tổng</th>
-        <th>${totalMoney / 50}</th>
-        <th>${totalMoney / 2}</th>
-        <th>${totalTip / 2}</th>
-        <th>${totalTip / 2 + totalMoney / 2}</th>
+        <th>${Math.round(totalMoney / 50)}</th>
+        <th>${totalMoney / 2}$ <span class="detail-data">(${totalMoney}$ /2  )</span></th>
+        <th>${totalTip / 2}$ <span class="detail-data">(${totalTip}$ /2  )</span></th>
+        <th>${totalTip / 2 + totalMoney / 2}$ <span class="detail-data">(${totalTip + totalMoney}$ /2  )</span></th>
       </tr>
     </tbody>
   `;
   resultsContainer.innerHTML = ""; // Xóa nội dung cũ
-  resultsContainer.appendChild(document.createElement("h3")).textContent = `Bảng lương cho ${Name.toUpperCase()}`;
+  resultsContainer.appendChild(
+    document.createElement("b")
+  ).innerHTML = `Bảng lương cho ${Name.toUpperCase()} (Đã chia) <button type="button" id="toggleDetails" class="btn btn-light"><i class="fad fa-exchange-alt"></i></button>`;
   resultsContainer.appendChild(salaryTable);
+  const btnToggleDetailsButton = document.getElementById("toggleDetails");
+
+  btnToggleDetailsButton.addEventListener("click", () => {
+    const detailDatas = document.querySelectorAll(".detail-data");
+    detailDatas.forEach((data) => {
+      data.style.display = data.style.display === "none" ? "inline" : "none";
+    });
+  });
 }
 
 // Khởi tạo khi trang tải xong

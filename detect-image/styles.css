@@ -14,7 +14,9 @@ body {
   margin: 20px auto;
   padding: 0 20px;
 }
-
+.detail-data {
+  display: none;
+}
 /* User info section */
 .user-info {
   margin-top: 25px;
