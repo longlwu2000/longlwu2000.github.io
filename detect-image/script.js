@@ -465,7 +465,8 @@ function splitDataByName(table) {
 //Data truyền vào có kiểu dữ liệu như dataByName
 function analyzeDataForMoney(data, dataKey, moneyDatas) {
   const moneyData = moneyDatas ?? new Map();
-  const parsedMoneyRegex = /(\d+(\.\d+)?\s*[$S])/g; // Regex để tìm tiền
+  // số có chứa dấu phẩy là số thập phân, dấu chấm là để phân cách hàng nghìn
+  const parsedMoneyRegex = /(\d{1,3}(?:\.\d{3})*(?:,\d+)?\s*[$S])/g;
 
   data.forEach((rows) => {
     rows.forEach((row) => {
@@ -474,9 +475,23 @@ function analyzeDataForMoney(data, dataKey, moneyDatas) {
       const tip = row[ConfigTableIndex.tip - 1];
       if (name && money) {
         const trimName = name.trim().toLowerCase();
-        const moneyMatch = money.match(parsedMoneyRegex);
-        const tipMatch = tip ? tip.match(parsedMoneyRegex) : [];
-        console.log("money", money);
+        const moneyMatch = money
+          .match(parsedMoneyRegex)
+          ?.map((m) =>
+            parseFloat(
+              m.replace(/[$S]/, "").replace(/\./, "").replace(/\,/, ".")
+            )
+          );
+        const tipMatch = tip
+          ? tip
+              .match(parsedMoneyRegex)
+              ?.map((m) =>
+                parseFloat(
+                  m.replace(/[$S]/, "").replace(/\./, "").replace(/\,/, ".")
+                )
+              )
+          : [];
+        // console.log("tipMatch", tipMatch);
 
         if (moneyMatch) {
           if (!moneyData.has(trimName)) {
