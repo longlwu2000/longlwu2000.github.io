@@ -497,14 +497,22 @@ function analyzeDataForMoney(data, dataKey, moneyDatas) {
           if (!moneyData.has(trimName)) {
             moneyData.set(trimName, []);
           }
+          let totalMoney = moneyMatch.reduce(
+            (sum, m) => sum + parseFloat(m),
+            0
+          );
+          let restMoney = totalMoney % 50;
+          totalMoney -= restMoney;
+          let totalTip = tipMatch
+            ? tipMatch.reduce((sum, t) => sum + parseFloat(t), 0)
+            : 0;
+          totalTip += restMoney;
           moneyData.get(trimName).push({
             dataKey: dataKey,
             money: moneyMatch,
             tip: tipMatch || [],
-            totalMoney: moneyMatch.reduce((sum, m) => sum + parseFloat(m), 0),
-            totalTip: tipMatch
-              ? tipMatch.reduce((sum, t) => sum + parseFloat(t), 0)
-              : 0,
+            totalMoney: totalMoney,
+            totalTip: totalTip,
             isDayOff: false,
             message: "",
           });
