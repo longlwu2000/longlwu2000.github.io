@@ -135,6 +135,27 @@ function removeFile(fileId) {
   document.getElementById("clearAllButton").disabled = !hasFiles;
 }
 
+// tìm row col chứa ngày tháng trong bảng
+function findDatesInTable(tableData) {
+  const datePatterns = [/(\d{1,2}-\d{1,2}-\d{4})/, /(\d{1,2}\/\d{1,2}\/\d{4})/];
+  const datePattern = new RegExp(
+    datePatterns.map((p) => p.source).join("|"),
+    "g"
+  );
+
+  for (let row = 0; row < tableData.length; row++) {
+    for (let col = 0; col < tableData[row].length; col++) {
+      const cellText = tableData[row][col];
+      if (datePattern.test(cellText)) {
+        console.log(`Tìm thấy ô ngày tháng tại hàng ${row}, cột ${col}`);
+        return { row, col };
+      }
+    }
+  }
+  console.log("Không tìm thấy ô ngày tháng trong bảng.");
+  return { row: -1, col: -1 };
+}
+
 // Xử lý và phân tích tất cả ảnh
 async function processAllImages() {
   MoneyDatas = undefined;
@@ -170,24 +191,44 @@ async function processAllImages() {
       for (const [fileId, file] of selectedFiles) {
         const progressBar = document.getElementById(`progress-${fileId}`);
         progressBar.style.width = "100%";
-        let table = analyzeAndDisplayTable(listRes[index], fileId);
-        if (table) tables.push(table);
+        let { tableData, maxColumns } = analyzeAndDisplayTable(
+          listRes[index],
+          fileId
+        );
+        console.log("rawtable", tableData[0]);
+
+        console.log("cleanTableData", cleanTableData(tableData));
+
+        if (tableData)
+          tables.push({
+            tableData: cleanTableData(tableData),
+            maxColumns,
+          });
         index++;
       }
+
       // sort table by first row second col (type date, so use momentjs)
       tables.sort((a, b) => {
-        const dateA = a[0][1] || a[0][0];
-        const dateB = b[0][1] || b[0][0];
+        const { row: rowA, col: colA } = findDatesInTable(a.tableData);
+        const { row: rowB, col: colB } = findDatesInTable(b.tableData);
+        if (rowA === -1 || rowB === -1) return 0;
+        const dateA = a.tableData[rowA][colA];
+        const dateB = b.tableData[rowB][colB];
+
         return moment(dateA, "DD-MM-YYYY").isBefore(moment(dateB, "DD-MM-YYYY"))
           ? -1
           : 1;
       });
       resetModal();
-      tables.forEach((table, index) => {
-        const splitData = splitDataByName(structuredClone(table));
-        const dateKey = table[0][1] || table[0][0];
-        addTableToResults(table, dateKey);
-        moneyDatas = analyzeDataForMoney(splitData, dateKey, moneyDatas);
+      tables.forEach(({ tableData, maxColumns }, index) => {
+        const splitData = splitDataByName(structuredClone(tableData));
+        const { row: dateRow, col: dateCol } = findDatesInTable(tableData);
+        const dateKey =
+          dateRow !== -1 ? tableData[dateRow][dateCol] : `File ${index + 1}`;
+        addTableToResults({ tableData, maxColumns }, dateKey);
+
+        moneyDatas = analyzeDataForCharge(splitData, dateKey, moneyDatas);
+        console.log("moneyDatas", moneyDatas);
       });
       MoneyDatas = moneyDatas;
       updateUserSelect();
@@ -226,6 +267,7 @@ async function analyzeImage(base64Images) {
     },
     body: JSON.stringify({
       base64: base64Images,
+      type: "DOCUMENT_TEXT_DETECTION",
     }),
   });
 
@@ -241,133 +283,8 @@ function analyzeAndDisplayTable(textAnnotations, fileId) {
   console.log("Phân tích kết quả cho file:", textAnnotations);
   let table = [];
   textAnnotations = textAnnotations.slice(1);
-
-  // Tổ chức dữ liệu theo tọa độ y
-  const yThreshold = 20; // Giảm ngưỡng để phân biệt dòng tốt hơn
-  const rowGroups = new Map();
-
-  // Bước 1: Nhóm dữ liệu theo dòng
-  textAnnotations.forEach((anno) => {
-    const text = anno.description;
-    const y = anno.boundingPoly.vertices[0].y;
-    const x = anno.boundingPoly.vertices[0].x || 0;
-    const width = (anno.boundingPoly.vertices[1].x || 0) - x;
-
-    let foundRow = false;
-    for (let [baseY, items] of rowGroups) {
-      if (Math.abs(y - baseY) <= yThreshold) {
-        items.push({ text, x, y, width });
-        foundRow = true;
-        break;
-      }
-    }
-
-    if (!foundRow) {
-      rowGroups.set(y, [{ text, x, y, width }]);
-    }
-  });
-
-  // Bước 2: Xử lý và gộp phần tử trong mỗi dòng
-  const rows = Array.from(rowGroups.entries())
-    .sort(([y1], [y2]) => y1 - y2)
-    .map(([_, items]) => {
-      const sortedItems = items.sort((a, b) => a.x - b.x);
-      const mergedItems = [];
-      let currentItem = null;
-
-      sortedItems.forEach((item) => {
-        if (!currentItem) {
-          currentItem = { ...item };
-        } else {
-          const gap = item.x - (currentItem.x + currentItem.width);
-          if (gap <= 15) {
-            // Giảm ngưỡng gộp để tách các phần tử riêng biệt
-            currentItem.text += item.text;
-            currentItem.width = item.x + item.width - currentItem.x;
-          } else {
-            mergedItems.push(currentItem);
-            currentItem = { ...item };
-          }
-        }
-      });
-      if (currentItem) {
-        mergedItems.push(currentItem);
-      }
-      return mergedItems;
-    });
-
-  // Bước 3: Xác định các khoảng x và phân cụm cột
-  const allXPositions = [];
-  rows.forEach((row) => {
-    row.forEach((item) => {
-      allXPositions.push(item.x);
-    });
-  });
-
-  // Sắp xếp và loại bỏ trùng lặp
-  const uniqueXPositions = [...new Set(allXPositions)].sort((a, b) => a - b);
-
-  // Phân cụm các vị trí x gần nhau thành các cột
-  const columnClusters = [];
-  let currentCluster = [uniqueXPositions[0]];
-
-  for (let i = 1; i < uniqueXPositions.length; i++) {
-    const gap = uniqueXPositions[i] - uniqueXPositions[i - 1];
-    if (gap <= 25) {
-      // Ngưỡng để xác định các x thuộc cùng một cột
-      currentCluster.push(uniqueXPositions[i]);
-    } else {
-      columnClusters.push(currentCluster);
-      currentCluster = [uniqueXPositions[i]];
-    }
-  }
-  columnClusters.push(currentCluster);
-
-  // Tính giá trị trung bình cho mỗi cột
-  const columnPositions = columnClusters.map((cluster) => {
-    return Math.round(cluster.reduce((a, b) => a + b) / cluster.length);
-  });
-
-  // Bước 4: Xác định các cột có dữ liệu
-  const columnsWithData = new Set();
-  rows.forEach((rowItems) => {
-    rowItems.forEach((item) => {
-      const nearestColumn = columnPositions.reduce((prev, curr) => {
-        return Math.abs(curr - item.x) < Math.abs(prev - item.x) ? curr : prev;
-      });
-      columnsWithData.add(nearestColumn);
-    });
-  });
-
-  // Lọc chỉ giữ lại các cột có dữ liệu
-  const activeColumns = columnPositions.filter((pos) =>
-    columnsWithData.has(pos)
-  );
-  // Tạo các dòng và lưu vào mảng table
-  rows.forEach((rowItems) => {
-    const tableRow = [];
-    // Map các item theo vị trí cột gần nhất
-    const itemsByColumn = new Map();
-    rowItems.forEach((item) => {
-      const nearestColumn = columnPositions.reduce((prev, curr) => {
-        return Math.abs(curr - item.x) < Math.abs(prev - item.x) ? curr : prev;
-      });
-      if (columnsWithData.has(nearestColumn)) {
-        itemsByColumn.set(nearestColumn, item);
-      }
-    });
-
-    // Tạo các ô chỉ cho các cột có dữ liệu và lưu vào mảng
-    activeColumns.forEach((colPos) => {
-      if (itemsByColumn.has(colPos)) {
-        const item = itemsByColumn.get(colPos);
-        tableRow.push(item.text);
-      }
-    });
-
-    table.push(tableRow);
-  });
-  return table;
+  const words = prepareOcrWords(textAnnotations);
+  return groupAndMergeRows(words, 10, 5);
 }
 
 // Create table HTML
@@ -417,11 +334,11 @@ function setupModal() {
   openReviewDataButton.disabled = true;
 }
 
-function addTableToResults(table, name) {
+function addTableToResults({ tableData, maxColumns }, name) {
   const modalTitle = document.getElementById("modal-title");
   const tableContent = `
     <h3>${name}</h3>
-    ${createTableHTML(table)}
+    ${generateHtmlTable(tableData, maxColumns)}
   `;
 
   modalTitle.textContent = `Kết quả phân tích`;
@@ -438,24 +355,75 @@ function resetModal() {
   modalTableContainer.innerHTML = "";
 }
 
-// Chia data theo name của từng người (lây từ hàng thứ 2 cho tới hàng không có tên thì k lấy nữa)
+// Chia data theo name của từng người
+// Rule:
+// Sau khi gặp hàng có label "name/tên", mỗi hàng tiếp theo sẽ được xem xét:
+// - Nếu ô đầu tiên (hoặc ô chứa tên) không có số và có độ dài hợp lệ -> đó là tên mới
+// - Hàng đó và các hàng tiếp theo (cho đến khi gặp tên mới hoặc hàng trống) thuộc về người đó
 function splitDataByName(table) {
   const dataByName = new Map();
+  let currentName = null;
+  let isAfterNameLabel = false;
 
-  table.forEach((row, index) => {
-    const name = /^\d+$/.test(row[0])
-      ? row[ConfigTableIndex.name]
-      : row[ConfigTableIndex.name - 1];
-    // console.log("sss", /^\d+$/.test(row[0]), row[0], name);
-    if (name && index > 0 && name.toLowerCase() !== "name") {
-      const trimName = name.trim();
-      if (!dataByName.has(trimName)) {
-        dataByName.set(trimName, []);
-      }
-      const rowData = /^\d+$/.test(row[0]) ? row.splice(1) : row;
-      dataByName.get(trimName).push(rowData);
+  for (let i = 0; i < table.length; i++) {
+    const rawRow = Array.isArray(table[i]) ? table[i] : [];
+    const row = rawRow.map((c) => (c ?? "").toString().trim());
+    const rowText = row.join(" ").trim();
+
+    // empty row => end current name block
+    if (!rowText) {
+      currentName = null;
+      continue;
     }
-  });
+
+    // detect a "name" label in any cell (e.g. "name", "tên")
+    const hasNameLabel = row.some((cell) =>
+      /\b(name|tên)\b/i.test(cell.toLowerCase())
+    );
+
+    if (hasNameLabel) {
+      isAfterNameLabel = true;
+      currentName = null;
+      continue;
+    }
+
+    // Nếu đã qua hàng label "name/tên"
+    if (isAfterNameLabel) {
+      // Kiểm tra ô đầu tiên có trống không
+      const firstCell = row[0];
+
+      // Nếu ô đầu tiên trống, dừng vòng lặp
+      if (!firstCell || firstCell.trim() === "") {
+        break;
+      }
+
+      // Kiểm tra xem có phải là hàng tổng kết không (chứa từ khóa như TONG, TOTAL, SUM, v.v.)
+      const isSummaryRow =
+        /^(tong|total|sum|tổng|huione|aba|in|bill|tiền|mặt)/i.test(firstCell);
+      if (isSummaryRow) {
+        break;
+      }
+
+      const isNewName =
+        !/\d/.test(firstCell) && firstCell.length > 1 && firstCell.length <= 30;
+
+      if (isNewName) {
+        // Đây là một tên mới
+        currentName = firstCell.trim().toLowerCase();
+        if (currentName.includes("chính")) {
+          currentName = "chinh";
+        }
+        if (!dataByName.has(currentName)) {
+          dataByName.set(currentName, []);
+        }
+        // Thêm hàng này vào data của người đó
+        dataByName.get(currentName).push(row);
+      } else if (currentName && dataByName.has(currentName)) {
+        // Không phải tên mới, thêm vào data của người hiện tại
+        dataByName.get(currentName).push(row);
+      }
+    }
+  }
 
   return dataByName;
 }
@@ -463,75 +431,196 @@ function splitDataByName(table) {
 // analyze data to get money in data (ví dụ: 50$ ( boss888 / huione ) + 50$ ( boss222 / inbill ) + 50$ ( boss222 / tm )
 // Chỉ lấy các giá trị đi kèm với ký tự $ (hoặc có thể là S)
 //Data truyền vào có kiểu dữ liệu như dataByName
-function analyzeDataForMoney(data, dataKey, moneyDatas) {
+// function analyzeDataForMoney(data, dataKey, moneyDatas) {
+//   const moneyData = moneyDatas ?? new Map();
+//   // số có chứa dấu phẩy là số thập phân, dấu chấm là để phân cách hàng nghìn
+//   const parsedMoneyRegex = /(\d{1,3}(?:\.\d{3})*(?:,\d+)?\s*[$S])/g;
+
+//   data.forEach((rows) => {
+//     rows.forEach((row) => {
+//       const name = row[ConfigTableIndex.name - 1];
+//       const money = row[ConfigTableIndex.money - 1];
+//       const tip = row[ConfigTableIndex.tip - 1];
+//       if (name && money) {
+//         const trimName = name.trim().toLowerCase();
+//         const moneyMatch = money
+//           .match(parsedMoneyRegex)
+//           ?.map((m) =>
+//             parseFloat(
+//               m.replace(/[$S]/, "").replace(/\./, "").replace(/\,/, ".")
+//             )
+//           );
+//         const tipMatch = tip
+//           ? tip
+//               .match(parsedMoneyRegex)
+//               ?.map((m) =>
+//                 parseFloat(
+//                   m.replace(/[$S]/, "").replace(/\./, "").replace(/\,/, ".")
+//                 )
+//               )
+//           : [];
+//         // console.log("tipMatch", tipMatch);
+
+//         if (moneyMatch) {
+//           if (!moneyData.has(trimName)) {
+//             moneyData.set(trimName, []);
+//           }
+//           let totalMoney = moneyMatch.reduce(
+//             (sum, m) => sum + parseFloat(m),
+//             0
+//           );
+//           let restMoney = totalMoney % 50;
+//           totalMoney -= restMoney;
+//           let totalTip = tipMatch
+//             ? tipMatch.reduce((sum, t) => sum + parseFloat(t), 0)
+//             : 0;
+//           totalTip += restMoney;
+//           moneyData.get(trimName).push({
+//             dataKey: dataKey,
+//             money: moneyMatch,
+//             tip: tipMatch || [],
+//             totalMoney: totalMoney,
+//             totalTip: totalTip,
+//             isDayOff: false,
+//             message: "",
+//           });
+//         } else {
+//           if (!moneyData.has(trimName)) {
+//             moneyData.set(trimName, []);
+//           }
+//           moneyData.get(trimName).push({
+//             dataKey: dataKey,
+//             money: [],
+//             tip: [],
+//             totalMoney: 0,
+//             totalTip: 0,
+//             isDayOff: money.toLowerCase().includes("off"),
+//             message: money,
+//           });
+//         }
+//       }
+//     });
+//   });
+
+//   return moneyData;
+// }
+
+function analyzeDataForCharge(data, dataKey, moneyDatas) {
   const moneyData = moneyDatas ?? new Map();
-  // số có chứa dấu phẩy là số thập phân, dấu chấm là để phân cách hàng nghìn
-  const parsedMoneyRegex = /(\d{1,3}(?:\.\d{3})*(?:,\d+)?\s*[$S])/g;
+  // Regex để tìm số tiền (có dấu $ hoặc S)
+  const moneyRegex = /(\d{1,3}(?:\.\d{3})*(?:,\d+)?)\s*[$S]/gi;
+  // Regex để tìm tên bảng (nằm trong dấu ngoặc đơn)
+  const tableNameRegex = /\(([^)]+)\)/g;
 
-  data.forEach((rows) => {
+  // Lặp qua từng entry trong splitData Map
+  data.forEach((rows, name) => {
+    // Khởi tạo mảng cho người này nếu chưa có
+    if (!moneyData.has(name)) {
+      moneyData.set(name, []);
+    }
+
+    // Map để nhóm charges theo tableName
+    const chargesByTable = new Map();
+    let hasData = false;
+    let isDayOff = false;
+
+    // Lặp qua từng row của người này
     rows.forEach((row) => {
-      const name = row[ConfigTableIndex.name - 1];
-      const money = row[ConfigTableIndex.money - 1];
-      const tip = row[ConfigTableIndex.tip - 1];
-      if (name && money) {
-        const trimName = name.trim().toLowerCase();
-        const moneyMatch = money
-          .match(parsedMoneyRegex)
-          ?.map((m) =>
-            parseFloat(
-              m.replace(/[$S]/, "").replace(/\./, "").replace(/\,/, ".")
-            )
-          );
-        const tipMatch = tip
-          ? tip
-              .match(parsedMoneyRegex)
-              ?.map((m) =>
-                parseFloat(
-                  m.replace(/[$S]/, "").replace(/\./, "").replace(/\,/, ".")
-                )
-              )
-          : [];
-        // console.log("tipMatch", tipMatch);
+      // Bỏ qua hàng đầu tiên (tên)
+      const dataColumns = row.slice(1); // Lấy các cột từ cột thứ 2 trở đi
 
-        if (moneyMatch) {
-          if (!moneyData.has(trimName)) {
-            moneyData.set(trimName, []);
-          }
-          let totalMoney = moneyMatch.reduce(
-            (sum, m) => sum + parseFloat(m),
-            0
-          );
-          let restMoney = totalMoney % 50;
-          totalMoney -= restMoney;
-          let totalTip = tipMatch
-            ? tipMatch.reduce((sum, t) => sum + parseFloat(t), 0)
-            : 0;
-          totalTip += restMoney;
-          moneyData.get(trimName).push({
-            dataKey: dataKey,
-            money: moneyMatch,
-            tip: tipMatch || [],
-            totalMoney: totalMoney,
-            totalTip: totalTip,
-            isDayOff: false,
-            message: "",
-          });
-        } else {
-          if (!moneyData.has(trimName)) {
-            moneyData.set(trimName, []);
-          }
-          moneyData.get(trimName).push({
-            dataKey: dataKey,
-            money: [],
-            tip: [],
-            totalMoney: 0,
-            totalTip: 0,
-            isDayOff: money.toLowerCase().includes("off"),
-            message: money,
+      // Kiểm tra xem có dữ liệu không
+      const rowText = dataColumns.join(" ").trim().toLowerCase();
+
+      // Kiểm tra day off
+      if (rowText.includes("off") || !rowText) {
+        isDayOff = true;
+        return;
+      }
+
+      // Xử lý từng cột dữ liệu
+      dataColumns.forEach((cell) => {
+        if (!cell || cell.trim() === "") return;
+
+        const cellText = cell.trim();
+
+        // Tìm tất cả số tiền trong cell
+        const moneyMatches = [...cellText.matchAll(moneyRegex)];
+        // Tìm tất cả tên bảng trong cell
+        const tableNameMatches = [...cellText.matchAll(tableNameRegex)];
+
+        // Nếu có số tiền
+        if (moneyMatches.length > 0) {
+          hasData = true;
+
+          moneyMatches.forEach((moneyMatch, index) => {
+            const moneyStr = moneyMatch[1];
+            // Chuyển đổi số tiền: dấu chấm là phân cách nghìn, dấu phẩy là thập phân
+            const money = parseFloat(
+              moneyStr.replace(/\./g, "").replace(/,/g, ".")
+            );
+
+            // Lấy tên bảng tương ứng (nếu có)
+            const tableName = tableNameMatches[index]
+              ? tableNameMatches[index][1].trim()
+              : "Unknown";
+
+            // Nhóm theo tableName
+            if (!chargesByTable.has(tableName)) {
+              chargesByTable.set(tableName, []);
+            }
+            chargesByTable.get(tableName).push(money);
           });
         }
-      }
+      });
     });
+
+    // Tạo object cho dataKey này
+    const dayData = {
+      dataKey: dataKey,
+      charges: [],
+      totalMoney: 0,
+      totalTip: 0,
+      isDayOff: false,
+    };
+
+    // Nếu là ngày off hoặc không có data
+    if (isDayOff || !hasData) {
+      dayData.isDayOff = true;
+    } else {
+      // Tính toán cho từng bảng
+      let grandTotalMoney = 0;
+      let grandTotalTip = 0;
+
+      chargesByTable.forEach((moneyList, tableName) => {
+        // Tổng tiền của bảng này
+        const tableTotal = moneyList.reduce((sum, m) => sum + m, 0);
+
+        // Tính phần money (chia cho 50, lấy phần nguyên nhân 50)
+        const tableMoney = Math.floor(tableTotal / 50) * 50;
+
+        // Phần dư chuyển sang tip
+        const tableTip = tableTotal - tableMoney;
+
+        // Thêm vào charges
+        dayData.charges.push({
+          tableName: tableName,
+          money: tableMoney,
+          tip: tableTip,
+          total: tableTotal,
+        });
+
+        // Cộng vào tổng
+        grandTotalMoney += tableMoney;
+        grandTotalTip += tableTip;
+      });
+
+      dayData.totalMoney = grandTotalMoney;
+      dayData.totalTip = grandTotalTip;
+    }
+
+    // Thêm dữ liệu ngày này vào mảng của người
+    moneyData.get(name).push(dayData);
   });
 
   return moneyData;
