@@ -533,7 +533,7 @@ function analyzeDataForCharge(data, dataKey, moneyDatas) {
       const rowText = dataColumns.join(" ").trim().toLowerCase();
 
       // Kiểm tra day off
-      if (rowText.includes("off") || !rowText) {
+      if (rowText.includes("off")) {
         isDayOff = true;
         return;
       }
@@ -585,7 +585,7 @@ function analyzeDataForCharge(data, dataKey, moneyDatas) {
     };
 
     // Nếu là ngày off hoặc không có data
-    if (isDayOff || !hasData) {
+    if (isDayOff) {
       dayData.isDayOff = true;
     } else {
       // Tính toán cho từng bảng
@@ -651,16 +651,16 @@ function createSalaryTable(moneyData, Name) {
           (item) => `
         <tr>
           <td>${item.dataKey}</td>
-          <td>${
-            item.isDayOff ? item.message : Math.round(item.totalMoney / 50)
+          <td ${ item.isDayOff ? 'colspan="4" style="background: #f8d7da;"' : ''}>${
+            item.isDayOff ? '<b>OFF</b>' : Math.round(item.totalMoney / 50)
           }</td>
-          <td>${item.totalMoney / 2}$ <span class="detail-data">(${
+          <td style="display: ${item.isDayOff ? 'none' : 'table-cell'}">${item.totalMoney / 2}$ <span class="detail-data">(${
             item.totalMoney
           }$ /2  )</span></td>
-          <td>${item.totalTip / 2}$ <span class="detail-data">(${
+          <td style="display: ${item.isDayOff ? 'none' : 'table-cell'}">${item.totalTip / 2}$ <span class="detail-data">(${
             item.totalTip
           }$ /2  )</span></td>
-          <td>${
+          <td style="display: ${item.isDayOff ? 'none' : 'table-cell'}">${
             item.totalTip / 2 + item.totalMoney / 2
           }$ <span class="detail-data">(${
             item.totalTip + item.totalMoney
