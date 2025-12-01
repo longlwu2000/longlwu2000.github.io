@@ -152,29 +152,14 @@ function cleanTableData(tableData) {
       }
     }
     
-    // Pattern 2: 1d/mm/yyyy hoặc 1d-mm-yyyy (số 1 dính vào ngày - ngày có 1 chữ số)
-    const invalidDatePattern2 = /^1(\d)[\/\-](\d{1,2})[\/\-](\d{2,4})$/;
-    const match2 = str.match(invalidDatePattern2);
+    // Pattern 2: Không xử lý các ngày 10-19 vì đó là ngày hợp lệ
+    // Chỉ xử lý khi có bằng chứng rõ ràng là lỗi OCR (ví dụ: tháng hoặc năm không hợp lệ)
+    // Tạm thời disable pattern này để tránh xóa nhầm số 1 của ngày 10-19
     
-    if (match2) {
-      const day = match2[1]; // d (1 chữ số)
-      const month = match2[2];
-      const year = match2[3];
-      
-      console.log(`Pattern 2 matched! day=${day}, month=${month}, year=${year}`);
-      
-      const dayNum = parseInt(day);
-      
-      // Nếu là số 1 + số đơn (11-19) mà dayNum <= 9 thì chắc chắn là lỗi
-      if (dayNum <= 9) {
-        const separator = str.includes('/') ? '/' : '-';
-        const fixedDate = `${day}${separator}${month}${separator}${year}`;
-        console.log(`✅ Fixed date: ${str} -> ${fixedDate}`);
-        return fixedDate;
-      } else {
-        console.log(`Day 1${day} might be valid (10-19), no fix`);
-      }
-    }
+    // KHÔNG CẦN Pattern 2 nữa vì:
+    // - Ngày 10-19 là hợp lệ (không phải lỗi)
+    // - Nếu OCR đọc sai "1" thành "11", "2" thành "12", v.v. thì cần logic khác
+    // - Pattern 1 đã xử lý trường hợp số 1 dính vào ngày 2 chữ số (ví dụ: 129 -> 29)
     
     return str;
   }
