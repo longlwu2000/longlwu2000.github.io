@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Tool Check Đơn Xexebox</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <!-- moment js -->
+    <script src="https://cdn.jsdelivr.net/npm/moment@2.29.4/moment.min.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" />
+    <style>
+      body {
+        background-color: #f0f2f5;
+        padding: 20px;
+        font-family: "Segoe UI", sans-serif;
+      }
+      .card {
+        border: none;
+        box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+        border-radius: 10px;
+        margin-bottom: 20px;
+      }
+      .card-header {
+        background: #fff;
+        border-bottom: 1px solid #eee;
+        padding: 15px 20px;
+        border-radius: 10px 10px 0 0 !important;
+      }
+      .img-product {
+        width: 60px;
+        height: 60px;
+        object-fit: cover;
+        border-radius: 6px;
+        border: 1px solid #ddd;
+      }
+      .table th {
+        font-size: 0.85rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        background-color: #f8f9fa;
+      }
+      .table td {
+        vertical-align: middle;
+        font-size: 0.95rem;
+      }
+      .goods-list {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+        font-size: 0.85rem;
+      }
+      .goods-list li {
+        margin-bottom: 4px;
+        display: flex;
+        align-items: center;
+      }
+      .badge-order {
+        font-family: monospace;
+        font-size: 0.9rem;
+        background: #e9ecef;
+        color: #333;
+        padding: 4px 8px;
+        border-radius: 4px;
+      }
+      .price-highlight {
+        color: #198754;
+        font-weight: 700;
+        font-size: 1.1rem;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container-fluid" style="max-width: 1400px">
+      <div class="d-flex justify-content-between align-items-center mb-4">
+        <h3 class="fw-bold text-primary"><i class="bi bi-box-seam"></i> Quản lý Đơn hàng</h3>
+        <span class="badge bg-warning text-dark" id="statusServer">Đang kết nối Server...</span>
+      </div>
+
+      <div class="card">
+        <div class="card-header fw-bold"><i class="bi bi-funnel"></i> Bộ lọc tìm kiếm</div>
+        <div class="card-body">
+          <form id="filterForm" class="row g-3">
+            <div class="col-md-3">
+              <label class="form-label text-muted small">Từ khóa</label>
+              <input type="text" class="form-control" id="keyword" placeholder="Tên user, tên hàng..." />
+            </div>
+            <div class="col-md-3">
+              <label class="form-label text-muted small">Mã đơn hàng</label>
+              <input type="text" class="form-control" id="order_no" placeholder="Nhập mã đơn..." />
+            </div>
+            <div class="row">
+              <div class="col-md-2">
+                <label class="form-label text-muted small">Từ ngày</label>
+                <input type="date" class="form-control" id="stime" />
+              </div>
+              <div class="col-md-2">
+                <label class="form-label text-muted small">time</label>
+                <input type="time" class="form-control" id="stime-with-seconds" name="time-with-seconds" step="1" />
+              </div>
+              <div class="col-md-2">
+                <label class="form-label text-muted small">Đến ngày</label>
+                <input type="date" class="form-control" id="etime" />
+              </div>
+              <div class="col-md-2">
+                <label class="form-label text-muted small">time</label>
+                <input type="time" class="form-control" id="etime-with-seconds" name="time-with-seconds" step="1" />
+              </div>
+            </div>
+            <div class="col-md-2 d-flex align-items-end">
+              <button type="submit" class="btn btn-primary w-100 fw-bold"><i class="bi bi-search"></i> Tìm kiếm</button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+          <span>Kết quả: <strong id="totalCount" class="text-danger">0</strong> đơn hàng</span>
+          <button class="btn btn-sm btn-outline-secondary" onclick="fetchData()"><i class="bi bi-arrow-clockwise"></i> Tải lại</button>
+        </div>
+        <div class="card-body p-0">
+          <div class="table-responsive">
+            <table class="table table-hover mb-0 align-middle">
+              <thead>
+                <tr>
+                  <th width="80">Ảnh</th>
+                  <th>Thông tin Đơn hàng</th>
+                  <th>Người dùng</th>
+                  <th>Chi tiết Sản phẩm</th>
+                  <th>Tài chính</th>
+                  <th>Ngày tạo</th>
+                </tr>
+              </thead>
+              <tbody id="tableBody"></tbody>
+            </table>
+          </div>
+
+          <div id="loading" class="text-center py-5" style="display: none">
+            <div class="spinner-border text-primary" role="status"></div>
+            <div class="mt-2 text-muted">Đang tải dữ liệu từ API...</div>
+          </div>
+          <div id="emptyState" class="text-center py-5 text-muted" style="display: none">
+            <i class="bi bi-inbox fs-1"></i>
+            <p>Không tìm thấy dữ liệu phù hợp.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      // URL của Node.js Server bạn vừa tạo
+      const API_URL = "http://localhost:3000/api/orders";
+
+      // Set giá trị mặc định cho input date (Hôm nay và hôm kia)
+      window.onload = () => {
+        const today = new Date();
+        const past = new Date();
+        past.setDate(today.getDate() - 2);
+
+        document.getElementById("etime").valueAsDate = today;
+        document.getElementById("stime").valueAsDate = past;
+        document.getElementById("stime-with-seconds").value = "00:00:00";
+        document.getElementById("etime-with-seconds").value = "23:59:59";
+
+        // Gọi lần đầu
+        // fetchData();
+      };
+
+      document.getElementById("filterForm").addEventListener("submit", function (e) {
+        e.preventDefault();
+        fetchData();
+      });
+
+      // Helper: Parse chuỗi JSON lạ của API này "[\"...\"]"
+      function safeJsonParse(str) {
+        try {
+          if (!str) return [];
+          // API trả về mảng dạng string, cần parse ra mảng thật
+          const parsed = JSON.parse(str);
+          // Đôi khi nó lồng nhau hoặc là mảng 1 phần tử
+          return Array.isArray(parsed) ? parsed : [];
+        } catch (e) {
+          return [str]; // Fallback nếu không phải json
+        }
+      }
+
+      function formatCurrency(amount) {
+        return new Intl.NumberFormat("vi-VN", { style: "currency", currency: "VND" }).format(amount);
+      }
+
+      async function fetchData() {
+        const keyword = document.getElementById("keyword").value;
+        const order_no = document.getElementById("order_no").value;
+        const stime = document.getElementById("stime").value;
+        const etime = document.getElementById("etime").value;
+        const stimeWithSeconds = document.getElementById("stime-with-seconds").value;
+        const etimeWithSeconds = document.getElementById("etime-with-seconds").value;
+
+        // Chuẩn bị params: Thêm giờ phút giây để API hiểu
+        const params = new URLSearchParams({
+          keyword: keyword,
+          order_no: order_no,
+          stime: moment(stime).isValid() ? moment(`${stime} ${stimeWithSeconds}`).format("YYYY-MM-DD HH:mm:ss") : "",
+          //add 23:59:59 to end date
+          etime: moment(etime).isValid() ? moment(`${etime} ${etimeWithSeconds}`).format("YYYY-MM-DD HH:mm:ss") : "",
+        });
+
+        // UI Update
+        document.getElementById("tableBody").innerHTML = "";
+        document.getElementById("loading").style.display = "block";
+        document.getElementById("emptyState").style.display = "none";
+        const statusEl = document.getElementById("statusServer");
+
+        try {
+          const response = await fetch(`${API_URL}?${params.toString()}`);
+
+          if (!response.ok) throw new Error("Không kết nối được Node Server");
+
+          const resData = await response.json();
+
+          statusEl.className = "badge bg-success";
+          statusEl.innerText = "Server: Online";
+
+          if (resData.code === 0) {
+            renderTable(resData.data);
+            document.getElementById("totalCount").innerText = resData.count;
+          } else {
+            alert("Lỗi API: " + (resData.msg || "Token hết hạn, vui lòng cập nhật Cookie trong server.js"));
+            statusEl.className = "badge bg-danger";
+            statusEl.innerText = "Lỗi Auth";
+          }
+        } catch (error) {
+          console.error(error);
+          statusEl.className = "badge bg-danger";
+          statusEl.innerText = "Mất kết nối Server";
+          alert("Lỗi: Không thể kết nối tới http://localhost:3000. Bạn đã chạy lệnh 'node server.js' chưa?");
+        } finally {
+          document.getElementById("loading").style.display = "none";
+        }
+      }
+
+      function renderTable(data) {
+        const tbody = document.getElementById("tableBody");
+
+        if (!data || data.length === 0) {
+          document.getElementById("emptyState").style.display = "block";
+          return;
+        }
+
+        const html = data
+          .map((item) => {
+            // Xử lý dữ liệu sản phẩm phức tạp
+            const goodsTitles = safeJsonParse(item.goods_title);
+            const goodsLogos = safeJsonParse(item.goods_logo);
+
+            // Lấy ảnh đại diện: ưu tiên ảnh sp đầu tiên, nếu ko có thì lấy ảnh manghe
+            let mainImg = item.manghe_logo;
+            if (goodsLogos.length > 0 && goodsLogos[0]) {
+              // Fix lỗi url có dấu gạch chéo ngược
+              mainImg = goodsLogos[0].replace(/\\\//g, "/");
+            }
+
+            // Render list tên sản phẩm
+            const goodsHtml = goodsTitles.map((t) => `<li><i class="bi bi-dot"></i> ${t}</li>`).join("");
+
+            return `
+                <tr>
+                    <td>
+                        <img src="${mainImg}" class="img-product" onerror="this.src='https://via.placeholder.com/60?text=No+Img'">
+                    </td>
+                    <td>
+                        <div class="fw-bold text-dark">${item.manghe_title}</div>
+                        <div class="badge-order mt-1">#${item.order_no}</div>
+                    </td>
+                    <td>
+                        <div class="small fw-bold">${item.user_email || "No Email"}</div>
+                        <div class="text-muted small">ID: ${item.mid}</div>
+                    </td>
+                    <td>
+                        <ul class="goods-list text-secondary">
+                            ${goodsHtml || "<li>Chưa có tên SP</li>"}
+                        </ul>
+                    </td>
+                    <td>
+                        <div class="price-highlight">${formatCurrency(item.price_sum)}</div>
+                        <div class="small text-muted">Đã trả: ${formatCurrency(item.pay_money)}</div>
+                    </td>
+                    <td class="text-muted small">
+                        ${item.create_time}
+                    </td>
+                </tr>
+            `;
+          })
+          .join("");
+
+        tbody.innerHTML = html;
+      }
+    </script>
+  </body>
+</html>
