@@ -4,10 +4,16 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Tool Check Đơn Xexebox</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
     <!-- moment js -->
     <script src="https://cdn.jsdelivr.net/npm/moment@2.29.4/moment.min.js"></script>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" />
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css"
+    />
     <style>
       body {
         background-color: #f0f2f5;
@@ -72,21 +78,49 @@
   <body>
     <div class="container-fluid" style="max-width: 1400px">
       <div class="d-flex justify-content-between align-items-center mb-4">
-        <h3 class="fw-bold text-primary"><i class="bi bi-box-seam"></i> Quản lý Đơn hàng</h3>
-        <span class="badge bg-warning text-dark" id="statusServer">Đang kết nối Server...</span>
+        <h3 class="fw-bold text-primary">
+          <i class="bi bi-box-seam"></i> Quản lý Đơn hàng
+        </h3>
+        <span class="badge bg-warning text-dark" id="statusServer"
+          >Đang kết nối Server...</span
+        >
       </div>
 
       <div class="card">
-        <div class="card-header fw-bold"><i class="bi bi-funnel"></i> Bộ lọc tìm kiếm</div>
+        <div class="card-header fw-bold">
+          <i class="bi bi-funnel"></i> Bộ lọc tìm kiếm
+        </div>
         <div class="card-body">
           <form id="filterForm" class="row g-3">
+            <div class="row">
+              <div class="col-md-3">
+                <label class="form-label text-muted small">Cookie</label>
+                <input
+                  type="text"
+                  class="form-control"
+                  id="cookie"
+                  placeholder="cookie"
+                  value="345m53rul8cpg1t1u2voa601rk"
+                />
+              </div>
+            </div>
             <div class="col-md-3">
               <label class="form-label text-muted small">Từ khóa</label>
-              <input type="text" class="form-control" id="keyword" placeholder="Tên user, tên hàng..." />
+              <input
+                type="text"
+                class="form-control"
+                id="keyword"
+                placeholder="Tên user, tên hàng..."
+              />
             </div>
             <div class="col-md-3">
               <label class="form-label text-muted small">Mã đơn hàng</label>
-              <input type="text" class="form-control" id="order_no" placeholder="Nhập mã đơn..." />
+              <input
+                type="text"
+                class="form-control"
+                id="order_no"
+                placeholder="Nhập mã đơn..."
+              />
             </div>
             <div class="row">
               <div class="col-md-2">
@@ -95,7 +129,13 @@
               </div>
               <div class="col-md-2">
                 <label class="form-label text-muted small">time</label>
-                <input type="time" class="form-control" id="stime-with-seconds" name="time-with-seconds" step="1" />
+                <input
+                  type="time"
+                  class="form-control"
+                  id="stime-with-seconds"
+                  name="time-with-seconds"
+                  step="1"
+                />
               </div>
               <div class="col-md-2">
                 <label class="form-label text-muted small">Đến ngày</label>
@@ -103,20 +143,74 @@
               </div>
               <div class="col-md-2">
                 <label class="form-label text-muted small">time</label>
-                <input type="time" class="form-control" id="etime-with-seconds" name="time-with-seconds" step="1" />
+                <input
+                  type="time"
+                  class="form-control"
+                  id="etime-with-seconds"
+                  name="time-with-seconds"
+                  step="1"
+                />
               </div>
             </div>
+            <div class="col-md-2">
+              <label class="form-label text-muted small">Limit</label>
+              <input
+                type="number"
+                class="form-control"
+                id="limit"
+                placeholder="Nhập giới hạn..."
+                value="10"
+                min="1"
+                step="1"
+              />
+            </div>
+            <div class="col-md-2">
+              <label class="form-label text-muted small">No. target</label>
+              <input
+                type="number"
+                class="form-control"
+                id="target"
+                placeholder="Số target..."
+                value="0"
+                min="0"
+                step="1"
+              />
+            </div>
             <div class="col-md-2 d-flex align-items-end">
-              <button type="submit" class="btn btn-primary w-100 fw-bold"><i class="bi bi-search"></i> Tìm kiếm</button>
+              <button type="submit" class="btn btn-primary w-100 fw-bold">
+                <i class="bi bi-search"></i> Tìm kiếm
+              </button>
             </div>
           </form>
         </div>
       </div>
 
       <div class="card">
-        <div class="card-header d-flex justify-content-between align-items-center">
-          <span>Kết quả: <strong id="totalCount" class="text-danger">0</strong> đơn hàng</span>
-          <button class="btn btn-sm btn-outline-secondary" onclick="fetchData()"><i class="bi bi-arrow-clockwise"></i> Tải lại</button>
+        <div
+          class="card-header d-flex justify-content-between align-items-center"
+        >
+          <span>
+            Kết quả: <strong id="totalCount" class="text-danger">0</strong> đơn
+            hàng
+            <small class="text-muted ms-3"
+              >| Tổng SP trang:
+              <strong id="totalGoodsCount" class="text-info">0</strong></small
+            >
+            <small class="text-muted ms-3"
+              >| No.target:
+              <strong id="targetDisplay" class="text-info">0</strong></small
+            >
+            <small class="text-muted ms-3"
+              >| Remaining:
+              <strong id="remainingCount" class="text-danger">0</strong></small
+            >
+          </span>
+          <button
+            class="btn btn-sm btn-outline-secondary"
+            onclick="fetchData(currentPage)"
+          >
+            <i class="bi bi-arrow-clockwise"></i> Tải lại
+          </button>
         </div>
         <div class="card-body p-0">
           <div class="table-responsive">
@@ -135,11 +229,30 @@
             </table>
           </div>
 
+          <!-- Pagination container -->
+          <div id="paginationContainer" class="p-3">
+            <nav aria-label="Page navigation">
+              <ul
+                class="pagination justify-content-center mb-0"
+                id="pagination"
+              ></ul>
+            </nav>
+          </div>
+          <div
+            id="pageInfo"
+            class="text-center small text-muted mb-2"
+            style="display: none"
+          ></div>
+
           <div id="loading" class="text-center py-5" style="display: none">
             <div class="spinner-border text-primary" role="status"></div>
             <div class="mt-2 text-muted">Đang tải dữ liệu từ API...</div>
           </div>
-          <div id="emptyState" class="text-center py-5 text-muted" style="display: none">
+          <div
+            id="emptyState"
+            class="text-center py-5 text-muted"
+            style="display: none"
+          >
             <i class="bi bi-inbox fs-1"></i>
             <p>Không tìm thấy dữ liệu phù hợp.</p>
           </div>
@@ -149,7 +262,12 @@
 
     <script>
       // URL của Node.js Server bạn vừa tạo
-      const API_URL = "http://localhost:3000/api/orders";
+      const API_URL = "https://webvideo-caster-longlwu2000-bd6ce391.koyeb.app/api/orders";
+
+      // current page state for pagination
+      let currentPage = 1;
+      // keep track of goods count on current page for computing remaining
+      let currentPageTotalGoods = 0;
 
       // Set giá trị mặc định cho input date (Hôm nay và hôm kia)
       window.onload = () => {
@@ -161,14 +279,63 @@
         document.getElementById("stime").valueAsDate = past;
         document.getElementById("stime-with-seconds").value = "00:00:00";
         document.getElementById("etime-with-seconds").value = "23:59:59";
+        document.getElementById("limit").value = "10";
+        document.getElementById("cookie").value = "345m53rul8cpg1t1u2voa601rk";
 
-        // Gọi lần đầu
-        // fetchData();
+        // Initialize target display from input
+        const initialTarget =
+          Number(document.getElementById("target").value) || 0;
+        const targetDisplayInit = document.getElementById("targetDisplay");
+        const remainingDisplayInit = document.getElementById("remainingCount");
+        if (targetDisplayInit) targetDisplayInit.innerText = initialTarget;
+        if (remainingDisplayInit)
+          remainingDisplayInit.innerText = initialTarget;
+        // Gọi lần đầu: tải trang 1 khi mở
+        fetchData(1);
       };
 
-      document.getElementById("filterForm").addEventListener("submit", function (e) {
-        e.preventDefault();
-        fetchData();
+      document
+        .getElementById("filterForm")
+        .addEventListener("submit", function (e) {
+          e.preventDefault();
+          // reset to first page when applying new filters
+          fetchData(1);
+        });
+
+      // When limit changes, reload page 1
+      document.getElementById("limit").addEventListener("change", function () {
+        // ensure minimum sensible limit
+        if (!this.value || parseInt(this.value, 10) < 1) this.value = "1";
+        fetchData(1);
+      });
+      // When target changes, update target display and remaining calculation
+      document.getElementById("target").addEventListener("change", function () {
+        const targetVal = Number(this.value) || 0;
+        const targetDisplay = document.getElementById("targetDisplay");
+        const remainingDisplay = document.getElementById("remainingCount");
+        if (targetDisplay) targetDisplay.innerText = targetVal;
+        if (remainingDisplay) {
+          const remaining = Math.max(
+            0,
+            targetVal - (currentPageTotalGoods || 0)
+          );
+          remainingDisplay.innerText = remaining;
+        }
+      });
+
+      // Keyboard navigation: left/right arrows navigate pages when pagination is visible
+      document.addEventListener("keydown", function (e) {
+        const paginationVisible =
+          document.getElementById("paginationContainer").style.display !==
+          "none";
+        if (!paginationVisible) return;
+        if (e.key === "ArrowLeft") {
+          e.preventDefault();
+          fetchData(Math.max(1, currentPage - 1));
+        } else if (e.key === "ArrowRight") {
+          e.preventDefault();
+          fetchData(currentPage + 1);
+        }
       });
 
       // Helper: Parse chuỗi JSON lạ của API này "[\"...\"]"
@@ -185,24 +352,138 @@
       }
 
       function formatCurrency(amount) {
-        return new Intl.NumberFormat("vi-VN", { style: "currency", currency: "VND" }).format(amount);
+        return new Intl.NumberFormat("vi-VN", {
+          style: "currency",
+          currency: "VND",
+        }).format(amount);
       }
 
-      async function fetchData() {
+      // Render pagination controls
+      function renderPagination(totalPages, activePage) {
+        const ul = document.getElementById("pagination");
+        ul.innerHTML = "";
+
+        if (totalPages <= 1) {
+          // hide pagination when there's only one page
+          document.getElementById("paginationContainer").style.display = "none";
+          document.getElementById("pageInfo").style.display = "none";
+          return;
+        }
+
+        document.getElementById("paginationContainer").style.display = "block";
+        const pageInfoEl = document.getElementById("pageInfo");
+        pageInfoEl.style.display = "block";
+        pageInfoEl.innerText = `Trang ${activePage} / ${totalPages}`;
+
+        // helper to create page item
+        function makeItem(
+          page,
+          label = null,
+          disabled = false,
+          active = false
+        ) {
+          const li = document.createElement("li");
+          li.className =
+            "page-item" +
+            (disabled ? " disabled" : "") +
+            (active ? " active" : "");
+          const a = document.createElement("a");
+          a.className = "page-link";
+          a.href = "#";
+          a.dataset.page = page;
+          a.innerText = label || page;
+          if (!disabled && !active) {
+            a.addEventListener("click", function (e) {
+              e.preventDefault();
+              fetchData(parseInt(this.dataset.page, 10));
+            });
+          }
+          li.appendChild(a);
+          return li;
+        }
+
+        // Prev
+        ul.appendChild(
+          makeItem(Math.max(1, activePage - 1), "‹", activePage === 1)
+        );
+
+        // Show first, maybe ellipsis, a window of pages, maybe ellipsis, last
+        const maxButtons = 7; // total numeric buttons to show including current
+        let start = Math.max(1, activePage - Math.floor(maxButtons / 2));
+        let end = start + maxButtons - 1;
+        if (end > totalPages) {
+          end = totalPages;
+          start = Math.max(1, end - maxButtons + 1);
+        }
+
+        if (start > 1) {
+          ul.appendChild(makeItem(1));
+          if (start > 2) {
+            const dot = document.createElement("li");
+            dot.className = "page-item disabled";
+            dot.innerHTML = '<span class="page-link">…</span>';
+            ul.appendChild(dot);
+          }
+        }
+
+        for (let p = start; p <= end; p++) {
+          ul.appendChild(makeItem(p, null, false, p === activePage));
+        }
+
+        if (end < totalPages) {
+          if (end < totalPages - 1) {
+            const dot = document.createElement("li");
+            dot.className = "page-item disabled";
+            dot.innerHTML = '<span class="page-link">…</span>';
+            ul.appendChild(dot);
+          }
+          ul.appendChild(makeItem(totalPages));
+        }
+
+        // Next
+        ul.appendChild(
+          makeItem(
+            Math.min(totalPages, activePage + 1),
+            "›",
+            activePage === totalPages
+          )
+        );
+      }
+
+      async function fetchData(page = 1) {
+        // normalize page and store state
+        currentPage = parseInt(page, 10) || 1;
+
         const keyword = document.getElementById("keyword").value;
         const order_no = document.getElementById("order_no").value;
         const stime = document.getElementById("stime").value;
         const etime = document.getElementById("etime").value;
-        const stimeWithSeconds = document.getElementById("stime-with-seconds").value;
-        const etimeWithSeconds = document.getElementById("etime-with-seconds").value;
+        const stimeWithSeconds =
+          document.getElementById("stime-with-seconds").value;
+        const etimeWithSeconds =
+          document.getElementById("etime-with-seconds").value;
+        const limit =
+          parseInt(document.getElementById("limit").value, 10) || 10;
+        const cookie = document.getElementById("cookie").value;
 
         // Chuẩn bị params: Thêm giờ phút giây để API hiểu
         const params = new URLSearchParams({
           keyword: keyword,
           order_no: order_no,
-          stime: moment(stime).isValid() ? moment(`${stime} ${stimeWithSeconds}`).format("YYYY-MM-DD HH:mm:ss") : "",
+          stime: moment(stime).isValid()
+            ? moment(`${stime} ${stimeWithSeconds}`).format(
+                "YYYY-MM-DD HH:mm:ss"
+              )
+            : "",
           //add 23:59:59 to end date
-          etime: moment(etime).isValid() ? moment(`${etime} ${etimeWithSeconds}`).format("YYYY-MM-DD HH:mm:ss") : "",
+          etime: moment(etime).isValid()
+            ? moment(`${etime} ${etimeWithSeconds}`).format(
+                "YYYY-MM-DD HH:mm:ss"
+              )
+            : "",
+          limit: String(limit),
+          page: String(currentPage),
+          cookie: cookie,
         });
 
         // UI Update
@@ -223,17 +504,68 @@
 
           if (resData.code === 0) {
             renderTable(resData.data);
-            document.getElementById("totalCount").innerText = resData.count;
+            // Normalize count to a number
+            const totalCount = Number(resData.count) || 0;
+            document.getElementById("totalCount").innerText = totalCount;
+
+            // Determine totalPages robustly: prefer explicit fields from API, fallback to count/limit
+            let totalPages = 0; // zero means no data
+            if (typeof resData.total_pages === "number") {
+              totalPages = resData.total_pages;
+            } else if (typeof resData.totalPages === "number") {
+              totalPages = resData.totalPages;
+            } else if (typeof resData.page_count === "number") {
+              totalPages = resData.page_count;
+            } else if (typeof resData.count === "number") {
+              // If count is zero, totalPages should be 0; otherwise compute normally
+              totalPages =
+                resData.count === 0
+                  ? 0
+                  : Math.max(1, Math.ceil(resData.count / limit));
+            } else if (typeof resData.has_more === "boolean") {
+              // If API indicates more pages, allow next page
+              totalPages = resData.has_more ? currentPage + 1 : currentPage;
+            } else if (Array.isArray(resData.data)) {
+              // If we received a full page (data.length === limit) assume there might be a next page
+              if (resData.data.length >= limit) totalPages = currentPage + 1;
+              else totalPages = currentPage;
+            }
+
+            // If server returned a count > 0 but currentPage is beyond range, jump back to last page
+            if (totalPages > 0 && currentPage > totalPages) {
+              // Load last page
+              fetchData(totalPages);
+              return;
+            }
+
+            // Debug: show why pagination is (not) shown
+            console.debug("Pagination compute:", {
+              currentPage,
+              limit,
+              totalPages,
+              resDataKeys:
+                resData && typeof resData === "object"
+                  ? Object.keys(resData)
+                  : [],
+            });
+            renderPagination(totalPages, currentPage);
           } else {
-            alert("Lỗi API: " + (resData.msg || "Token hết hạn, vui lòng cập nhật Cookie trong server.js"));
+            alert(
+              "Lỗi API: " +
+                (resData.msg ||
+                  "Token hết hạn, vui lòng cập nhật Cookie trong server.js")
+            );
             statusEl.className = "badge bg-danger";
             statusEl.innerText = "Lỗi Auth";
+            renderPagination(1, 1);
           }
         } catch (error) {
           console.error(error);
           statusEl.className = "badge bg-danger";
           statusEl.innerText = "Mất kết nối Server";
-          alert("Lỗi: Không thể kết nối tới http://localhost:3000. Bạn đã chạy lệnh 'node server.js' chưa?");
+          alert(
+            "Lỗi: Không thể kết nối tới http://localhost:3000. Bạn đã chạy lệnh 'node server.js' chưa?"
+          );
         } finally {
           document.getElementById("loading").style.display = "none";
         }
@@ -241,9 +573,22 @@
 
       function renderTable(data) {
         const tbody = document.getElementById("tableBody");
+        let totalGoodsOnPage = 0;
 
         if (!data || data.length === 0) {
           document.getElementById("emptyState").style.display = "block";
+          // reset total goods and remaining in UI
+          const totalGoodsEl = document.getElementById("totalGoodsCount");
+          if (totalGoodsEl) totalGoodsEl.innerText = 0;
+          currentPageTotalGoods = 0;
+          const remainingDisplay = document.getElementById("remainingCount");
+          const targetVal =
+            Number(document.getElementById("target").value) || 0;
+          if (remainingDisplay)
+            remainingDisplay.innerText = Math.max(
+              0,
+              targetVal - currentPageTotalGoods
+            );
           return;
         }
 
@@ -252,6 +597,20 @@
             // Xử lý dữ liệu sản phẩm phức tạp
             const goodsTitles = safeJsonParse(item.goods_title);
             const goodsLogos = safeJsonParse(item.goods_logo);
+            // goods_id may be returned as JSON string like "[\"id\"]"; parse it
+            const goodsIds = safeJsonParse(item.goods_id);
+            // If number_goods present and a number, use it; otherwise fallback to goods_id length
+            let goodsCount = 0;
+            if (
+              item &&
+              (typeof item.number_goods === "number" ||
+                !isNaN(Number(item.number_goods)))
+            ) {
+              goodsCount = Number(item.number_goods) || 0;
+            } else {
+              goodsCount = Array.isArray(goodsIds) ? goodsIds.length : 0;
+            }
+            totalGoodsOnPage += goodsCount;
 
             // Lấy ảnh đại diện: ưu tiên ảnh sp đầu tiên, nếu ko có thì lấy ảnh manghe
             let mainImg = item.manghe_logo;
@@ -261,29 +620,42 @@
             }
 
             // Render list tên sản phẩm
-            const goodsHtml = goodsTitles.map((t) => `<li><i class="bi bi-dot"></i> ${t}</li>`).join("");
+            const goodsHtml = goodsTitles
+              .map((t) => `<li><i class="bi bi-dot"></i> ${t}</li>`)
+              .join("");
 
             return `
                 <tr>
                     <td>
-                        <img src="${mainImg}" class="img-product" onerror="this.src='https://via.placeholder.com/60?text=No+Img'">
+                        <img src="${mainImg}" class="img-product" alt="${
+              item.manghe_title || "No Image"
+            }" onerror="this.onerror=null;this.src='https://t4.ftcdn.net/jpg/06/71/92/37/360_F_671923740_x0zOL3OIuUAnSF6sr7PuznCI5bQFKhI0.jpg'">
                     </td>
                     <td>
-                        <div class="fw-bold text-dark">${item.manghe_title}</div>
+                        <div class="fw-bold text-dark">${
+                          item.manghe_title
+                        }</div>
                         <div class="badge-order mt-1">#${item.order_no}</div>
                     </td>
                     <td>
-                        <div class="small fw-bold">${item.user_email || "No Email"}</div>
+                        <div class="small fw-bold">${
+                          item.user_email || "No Email"
+                        }</div>
                         <div class="text-muted small">ID: ${item.mid}</div>
                     </td>
-                    <td>
+          <td>
                         <ul class="goods-list text-secondary">
                             ${goodsHtml || "<li>Chưa có tên SP</li>"}
                         </ul>
+            <div class="small text-muted mt-1">Số SP: ${goodsCount}</div>
                     </td>
                     <td>
-                        <div class="price-highlight">${formatCurrency(item.price_sum)}</div>
-                        <div class="small text-muted">Đã trả: ${formatCurrency(item.pay_money)}</div>
+                        <div class="price-highlight">${formatCurrency(
+                          item.price_sum
+                        )}</div>
+                        <div class="small text-muted">Đã trả: ${formatCurrency(
+                          item.pay_money
+                        )}</div>
                     </td>
                     <td class="text-muted small">
                         ${item.create_time}
@@ -294,6 +666,20 @@
           .join("");
 
         tbody.innerHTML = html;
+        // update total goods on current page
+        const totalGoodsEl = document.getElementById("totalGoodsCount");
+        if (totalGoodsEl) totalGoodsEl.innerText = totalGoodsOnPage;
+        currentPageTotalGoods = totalGoodsOnPage;
+        // update target display + remaining
+        const targetVal = Number(document.getElementById("target").value) || 0;
+        const targetDisplay = document.getElementById("targetDisplay");
+        const remainingDisplay = document.getElementById("remainingCount");
+        if (targetDisplay) targetDisplay.innerText = targetVal;
+        if (remainingDisplay)
+          remainingDisplay.innerText = Math.max(
+            0,
+            targetVal - currentPageTotalGoods
+          );
       }
     </script>
   </body>
