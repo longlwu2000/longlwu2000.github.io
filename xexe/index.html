@@ -73,6 +73,9 @@
         font-weight: 700;
         font-size: 1.1rem;
       }
+      .highlight-test {
+        background-color: rgba(13, 110, 253, 0.08); /* light blue */
+      }
     </style>
   </head>
   <body>
@@ -204,6 +207,11 @@
               >| Remaining:
               <strong id="remainingCount" class="text-danger">0</strong></small
             >
+            <small class="text-muted ms-3"
+              >| Users:
+              <strong id="normalUsersCount" class="text-secondary">0</strong> regular /
+              <strong id="testUsersCount" class="text-info">0</strong> test</small
+            >
           </span>
           <button
             class="btn btn-sm btn-outline-secondary"
@@ -211,12 +219,16 @@
           >
             <i class="bi bi-arrow-clockwise"></i> Tải lại
           </button>
+          <button id="filterTestUsersBtn" class="btn btn-sm btn-outline-info ms-2" onclick="toggleFilterTestUsers()">
+            <i class="bi bi-filter"></i> Filter test users
+          </button>
+          <small id="testMembersStatus" class="text-muted ms-2 small">Total test members in DB: <strong id="testMembersCount">0</strong></small>
         </div>
         <div class="card-body p-0">
           <div class="table-responsive">
             <table class="table table-hover mb-0 align-middle">
               <thead>
-                <tr>
+                <tr class="${isTestOrder ? 'highlight-test' : ''}">
                   <th width="80">Ảnh</th>
                   <th>Thông tin Đơn hàng</th>
                   <th>Người dùng</th>
@@ -262,12 +274,20 @@
 
     <script>
       // URL của Node.js Server bạn vừa tạo
+      // const API_URL = "http://localhost:3000/api/orders";
       const API_URL = "https://webvideo-caster-longlwu2000-bd6ce391.koyeb.app/api/orders";
 
-      // current page state for pagination
-      let currentPage = 1;
-      // keep track of goods count on current page for computing remaining
-      let currentPageTotalGoods = 0;
+  // current page state for pagination
+  let currentPage = 1;
+  // keep track of goods count on current page for computing remaining
+  let currentPageTotalGoods = 0;
+  // keep track of test goods count on current page for breakdowns
+  let currentPageTestGoods = 0;
+  // members/test user filtering
+  const MEMBERS_API = API_URL.replace('/api/orders', '/api/members');
+  let testMemberIds = new Set();
+  let membersFetched = false; // whether members have been fetched at least once
+  let filterTestUsersActive = false;
 
       // Set giá trị mặc định cho input date (Hôm nay và hôm kia)
       window.onload = () => {
@@ -315,11 +335,9 @@
         const remainingDisplay = document.getElementById("remainingCount");
         if (targetDisplay) targetDisplay.innerText = targetVal;
         if (remainingDisplay) {
-          const remaining = Math.max(
-            0,
-            targetVal - (currentPageTotalGoods || 0)
-          );
-          remainingDisplay.innerText = remaining;
+          const remainingTotal = Math.max(0, targetVal - (currentPageTotalGoods || 0));
+          const normalRemaining = Math.max(0, remainingTotal - (currentPageTestGoods || 0));
+          remainingDisplay.innerText = `${remainingTotal} (${normalRemaining} + ${currentPageTestGoods || 0} item test)`;
         }
       });
 
@@ -450,6 +468,66 @@
         );
       }
 
+      // Fetch test members from API and save IDs into testMemberIds set
+      async function fetchTestMembers() {
+        if (membersFetched) return true; // already fetched once
+        const cookie = document.getElementById('cookie') && document.getElementById('cookie').value;
+        const params = new URLSearchParams({ page: '1', limit: '999' });
+        if (cookie) params.set('cookie', cookie);
+        const statusEl = document.getElementById('statusServer');
+        try {
+          const res = await fetch(`${MEMBERS_API}?${params.toString()}`);
+          if (!res.ok) throw new Error('Không kết nối được Members API');
+          const resData = await res.json();
+          if (resData.code === 0 && Array.isArray(resData.data)) {
+            testMemberIds = new Set(resData.data.map((m) => String(m.id)));
+            document.getElementById('testMembersCount').innerText = resData.count || resData.data.length;
+            membersFetched = true;
+            return true;
+          } else {
+            alert('Lỗi Members API: ' + (resData.msg || 'Không thể lấy danh sách member'));
+            return false;
+          }
+        } catch (err) {
+          console.error(err);
+          statusEl.className = 'badge bg-danger';
+          statusEl.innerText = 'Mất kết nối Members';
+          return false;
+        }
+      }
+
+      // Toggle filter ON/OFF. When ON, fetch members and then re-render table with filter
+      async function toggleFilterTestUsers() {
+        const btn = document.getElementById('filterTestUsersBtn');
+        filterTestUsersActive = !filterTestUsersActive;
+        if (filterTestUsersActive) {
+          // change style to indicate active
+          btn.classList.remove('btn-outline-info');
+          btn.classList.add('btn-info');
+          btn.innerHTML = '<i class="bi bi-filter"></i> Filter test users (ON)';
+          // fetch members if not fetched yet
+          if (!membersFetched) {
+            btn.disabled = true;
+            const ok = await fetchTestMembers();
+            btn.disabled = false;
+            if (!ok) {
+              filterTestUsersActive = false;
+              btn.classList.remove('btn-info');
+              btn.classList.add('btn-outline-info');
+              return;
+            }
+          }
+          // reload page 1 and filter
+          fetchData(1);
+        } else {
+          // turn off filter
+          btn.classList.remove('btn-info');
+          btn.classList.add('btn-outline-info');
+          btn.innerHTML = '<i class="bi bi-filter"></i> Filter test users';
+          fetchData(1);
+        }
+      }
+
       async function fetchData(page = 1) {
         // normalize page and store state
         currentPage = parseInt(page, 10) || 1;
@@ -493,6 +571,8 @@
         const statusEl = document.getElementById("statusServer");
 
         try {
+          // Fetch members only once (first time we're loading orders). This populates testMemberIds used to compute highlights.
+          if (!membersFetched) await fetchTestMembers();
           const response = await fetch(`${API_URL}?${params.toString()}`);
 
           if (!response.ok) throw new Error("Không kết nối được Node Server");
@@ -582,17 +662,28 @@
           if (totalGoodsEl) totalGoodsEl.innerText = 0;
           currentPageTotalGoods = 0;
           const remainingDisplay = document.getElementById("remainingCount");
-          const targetVal =
-            Number(document.getElementById("target").value) || 0;
-          if (remainingDisplay)
-            remainingDisplay.innerText = Math.max(
-              0,
-              targetVal - currentPageTotalGoods
-            );
+          const targetVal = Number(document.getElementById("target").value) || 0;
+          if (remainingDisplay) {
+            const remainingTotal = Math.max(0, targetVal - currentPageTotalGoods);
+            const normalRemaining = Math.max(0, remainingTotal - 0);
+            remainingDisplay.innerText = `${remainingTotal} (${normalRemaining} + 0 item test)`;
+          }
+          // Reset user counts
+          const normalUsersEl = document.getElementById('normalUsersCount');
+          const testUsersEl = document.getElementById('testUsersCount');
+          if (normalUsersEl) normalUsersEl.innerText = 0;
+          if (testUsersEl) testUsersEl.innerText = 0;
           return;
         }
 
-        const html = data
+        const displayData = (filterTestUsersActive && testMemberIds && testMemberIds.size > 0)
+          ? data.filter((item) => testMemberIds.has(String(item.mid)))
+          : data;
+
+  // track goods sums per test / normal users for the display (displayData is already filtered when filter active)
+        let testGoodsSum = 0;
+        let normalGoodsSum = 0;
+        const html = displayData
           .map((item) => {
             // Xử lý dữ liệu sản phẩm phức tạp
             const goodsTitles = safeJsonParse(item.goods_title);
@@ -611,6 +702,11 @@
               goodsCount = Array.isArray(goodsIds) ? goodsIds.length : 0;
             }
             totalGoodsOnPage += goodsCount;
+            if (testMemberIds && testMemberIds.size > 0 && testMemberIds.has(String(item.mid))) {
+              testGoodsSum += goodsCount;
+            } else {
+              normalGoodsSum += goodsCount;
+            }
 
             // Lấy ảnh đại diện: ưu tiên ảnh sp đầu tiên, nếu ko có thì lấy ảnh manghe
             let mainImg = item.manghe_logo;
@@ -624,8 +720,9 @@
               .map((t) => `<li><i class="bi bi-dot"></i> ${t}</li>`)
               .join("");
 
-            return `
-                <tr>
+            const isTestOrder = testMemberIds && testMemberIds.size > 0 && testMemberIds.has(String(item.mid));
+      return `
+        <tr class="${isTestOrder ? 'highlight-test' : ''}">
                     <td>
                         <img src="${mainImg}" class="img-product" alt="${
               item.manghe_title || "No Image"
@@ -640,7 +737,7 @@
                     <td>
                         <div class="small fw-bold">${
                           item.user_email || "No Email"
-                        }</div>
+                        }${isTestOrder ? '<span class="badge bg-info text-dark ms-1">TEST</span>' : ''}</div>
                         <div class="text-muted small">ID: ${item.mid}</div>
                     </td>
           <td>
@@ -665,21 +762,37 @@
           })
           .join("");
 
-        tbody.innerHTML = html;
-        // update total goods on current page
-        const totalGoodsEl = document.getElementById("totalGoodsCount");
-        if (totalGoodsEl) totalGoodsEl.innerText = totalGoodsOnPage;
-        currentPageTotalGoods = totalGoodsOnPage;
+  tbody.innerHTML = html;
+        // compute and update normal/test user counts for this page
+        let testUsers = 0;
+        let normalUsers = 0;
+        if (Array.isArray(displayData)) {
+          for (const it of displayData) {
+            if (testMemberIds && testMemberIds.size > 0 && testMemberIds.has(String(it.mid))) testUsers++;
+            else normalUsers++;
+          }
+        }
+        const normalUsersEl = document.getElementById('normalUsersCount');
+        const testUsersEl = document.getElementById('testUsersCount');
+        if (normalUsersEl) normalUsersEl.innerText = normalUsers;
+        if (testUsersEl) testUsersEl.innerText = testUsers;
+
+  // update total goods on current page
+  const totalGoodsEl = document.getElementById("totalGoodsCount");
+  if (totalGoodsEl) totalGoodsEl.innerText = totalGoodsOnPage;
+  currentPageTotalGoods = totalGoodsOnPage;
+  currentPageTestGoods = testGoodsSum;
         // update target display + remaining
         const targetVal = Number(document.getElementById("target").value) || 0;
         const targetDisplay = document.getElementById("targetDisplay");
         const remainingDisplay = document.getElementById("remainingCount");
         if (targetDisplay) targetDisplay.innerText = targetVal;
-        if (remainingDisplay)
-          remainingDisplay.innerText = Math.max(
-            0,
-            targetVal - currentPageTotalGoods
-          );
+        if (remainingDisplay) {
+          const remainingTotal = Math.max(0, targetVal - currentPageTotalGoods);
+          // normalRemaining: remainingTotal minus test goods taken from the page (can't be negative)
+          const normalRemaining = Math.max(0, remainingTotal - testGoodsSum);
+          remainingDisplay.innerText = `${remainingTotal} (${normalRemaining} + ${testGoodsSum} item test)`;
+        }
       }
     </script>
   </body>
