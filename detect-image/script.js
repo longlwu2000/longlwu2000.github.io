@@ -7,6 +7,8 @@ const defaultUserList = [];
 // Cấu hình API
 const API_ENDPOINT =
   "https://webvideo-caster-longlwu2000-bd6ce391.koyeb.app/analyze-image";
+const API_ENDPOINT_PYTHON =
+  "https://webvideo-caster-longlwu2000-bd6ce391.koyeb.app/analyze-image-python";
 const API_KEY = "AIzaSyBeo4NGA__U6Xxy-aBE6yFm19pgq8TY-TM";
 const ConfigTableIndex = {
   name: 1,
@@ -136,13 +138,21 @@ function removeFile(fileId) {
 }
 
 // tìm row col chứa ngày tháng trong bảng
-function findDatesInTable(tableData) {
+function findDatesInTable(tableData, tableTitle = null) {
   const datePatterns = [/(\d{1,2}-\d{1,2}-\d{4})/, /(\d{1,2}\/\d{1,2}\/\d{4})/];
   const datePattern = new RegExp(
     datePatterns.map((p) => p.source).join("|"),
     "g"
   );
 
+  // Kiểm tra title trước nếu có
+  if (tableTitle && datePattern.test(tableTitle)) {
+    console.log(`Tìm thấy ngày tháng trong title: ${tableTitle}`);
+    // Trả về giá trị đặc biệt để biết ngày nằm trong title
+    return { row: -2, col: -2, dateValue: tableTitle.match(datePattern)[0] };
+  }
+
+  // Nếu không có trong title, tìm trong data
   for (let row = 0; row < tableData.length; row++) {
     for (let col = 0; col < tableData[row].length; col++) {
       const cellText = tableData[row][col];
@@ -162,69 +172,149 @@ async function processAllImages() {
   const analyzeButton = document.getElementById("analyzeButton");
   const createSalaryButton = document.getElementById("createSalaryButton");
   analyzeButton.disabled = true;
-  const base64Images = [];
+  
   try {
+    // Cập nhật progress ban đầu
     for (const [fileId, file] of selectedFiles) {
       const progressBar = document.getElementById(`progress-${fileId}`);
-      progressBar.style.width = "30%";
-
-      // Chuyển ảnh thành base64
-      const base64Image = await convertToBase64(file);
-      progressBar.style.width = "50%";
-
-      base64Images.push(base64Image);
-      // Cập nhật tiến độ
-      progressBar.style.width = "80%";
+      progressBar.style.width = "10%";
     }
 
-    // Gọi API Vision
-    const result = await analyzeImage(base64Images);
+    let tables = [];
+    let usePythonApi = true;
 
-    // Xử lý và hiển thị kết quả
-    console.log(result);
-    if (result?.data?.responses?.length) {
-      const listRes = result.data.responses.map((res) => res.textAnnotations);
-      console.log(listRes);
-      let index = 0;
-      let tables = [];
-      let moneyDatas;
+    try {
+      // Thử gọi API Python trước
+      console.log("Đang gọi API Python...");
+      const pythonResult = await analyzeImagePython(selectedFiles);
+      
+      // Cập nhật progress
       for (const [fileId, file] of selectedFiles) {
         const progressBar = document.getElementById(`progress-${fileId}`);
-        progressBar.style.width = "100%";
-        let { tableData, maxColumns } = analyzeAndDisplayTable(
-          listRes[index],
-          fileId
-        );
-        console.log("rawtable", tableData[0]);
-
-        console.log("cleanTableData", cleanTableData(tableData));
-
-        if (tableData)
-          tables.push({
-            tableData: cleanTableData(tableData),
-            maxColumns,
-          });
-        index++;
+        progressBar.style.width = "50%";
       }
 
+      console.log("Kết quả từ API Python:", pythonResult);
+
+      if (pythonResult?.data?.results?.length) {
+        // Xử lý kết quả từ Python API
+        pythonResult.data.results.forEach((result, index) => {
+          if (result.status === "success" && result.tables?.length > 0) {
+            const fileIdArray = Array.from(selectedFiles.keys());
+            const fileId = fileIdArray[index];
+            const progressBar = document.getElementById(`progress-${fileId}`);
+            progressBar.style.width = "100%";
+
+            // Lấy bảng đầu tiên (hoặc có thể xử lý nhiều bảng nếu cần)
+            result.tables.forEach((table) => {
+              const tableData = table.data;
+              const maxColumns = table.shape.columns;
+              const tableTitle = table.title;
+              
+              if (tableData && tableData.length > 0) {
+                tables.push({
+                  tableData: cleanTableData(tableData),
+                  maxColumns: maxColumns,
+                  title: tableTitle, // Lưu title để có thể lấy ngày từ đó
+                });
+              }
+            });
+          }
+        });
+        console.log("Sử dụng kết quả từ API Python");
+      } else {
+        throw new Error("Python API không trả về dữ liệu hợp lệ");
+      }
+    } catch (pythonError) {
+      // Nếu API Python lỗi, fallback về API Google Vision
+      console.warn("API Python lỗi, chuyển sang API Google Vision:", pythonError);
+      usePythonApi = false;
+      
+      const base64Images = [];
+      for (const [fileId, file] of selectedFiles) {
+        const progressBar = document.getElementById(`progress-${fileId}`);
+        progressBar.style.width = "30%";
+
+        // Chuyển ảnh thành base64
+        const base64Image = await convertToBase64(file);
+        progressBar.style.width = "50%";
+
+        base64Images.push(base64Image);
+        progressBar.style.width = "80%";
+      }
+
+      // Gọi API Vision
+      const result = await analyzeImage(base64Images);
+
+      // Xử lý và hiển thị kết quả
+      console.log("Kết quả từ Google Vision API:", result);
+      if (result?.data?.responses?.length) {
+        const listRes = result.data.responses.map((res) => res.textAnnotations);
+        console.log(listRes);
+        let index = 0;
+        for (const [fileId, file] of selectedFiles) {
+          const progressBar = document.getElementById(`progress-${fileId}`);
+          progressBar.style.width = "100%";
+          let { tableData, maxColumns } = analyzeAndDisplayTable(
+            listRes[index],
+            fileId
+          );
+          console.log("rawtable", tableData[0]);
+          console.log("cleanTableData", cleanTableData(tableData));
+
+          if (tableData)
+            tables.push({
+              tableData: cleanTableData(tableData),
+              maxColumns,
+            });
+          index++;
+        }
+        console.log("Sử dụng kết quả từ Google Vision API");
+      } else {
+        throw new Error("Không có dữ liệu từ cả hai API");
+      }
+    }
+
+    // Xử lý tables đã thu thập được
+    if (tables.length > 0) {
       // sort table by first row second col (type date, so use momentjs)
       tables.sort((a, b) => {
-        const { row: rowA, col: colA } = findDatesInTable(a.tableData);
-        const { row: rowB, col: colB } = findDatesInTable(b.tableData);
-        if (rowA === -1 || rowB === -1) return 0;
-        const dateA = a.tableData[rowA][colA];
-        const dateB = b.tableData[rowB][colB];
+        const dateInfoA = findDatesInTable(a.tableData, a.title);
+        const dateInfoB = findDatesInTable(b.tableData, b.title);
+        if (dateInfoA.row === -1 || dateInfoB.row === -1) return 0;
+        
+        // Lấy giá trị ngày từ title hoặc từ cell
+        const dateA = dateInfoA.row === -2 
+          ? dateInfoA.dateValue 
+          : a.tableData[dateInfoA.row][dateInfoA.col];
+        const dateB = dateInfoB.row === -2 
+          ? dateInfoB.dateValue 
+          : b.tableData[dateInfoB.row][dateInfoB.col];
 
         return moment(dateA, "DD-MM-YYYY").isBefore(moment(dateB, "DD-MM-YYYY"))
           ? -1
           : 1;
       });
+      
       resetModal();
-      tables.forEach(({ tableData, maxColumns }, index) => {
+      let moneyDatas;
+      tables.forEach(({ tableData, maxColumns, title }, index) => {
         const splitData = splitDataByName(structuredClone(tableData));
-        const { row: dateRow, col: dateCol } = findDatesInTable(tableData);
-        const dateKey =
-          dateRow !== -1 ? tableData[dateRow][dateCol] : `File ${index + 1}`;
+        const dateInfo = findDatesInTable(tableData, title);
+        
+        // Lấy dateKey từ title hoặc từ cell
+        let dateKey;
+        if (dateInfo.row === -2) {
+          // Ngày nằm trong title
+          dateKey = dateInfo.dateValue;
+        } else if (dateInfo.row !== -1) {
+          // Ngày nằm trong cell
+          dateKey = tableData[dateInfo.row][dateInfo.col];
+        } else {
+          // Không tìm thấy ngày
+          dateKey = `File ${index + 1}`;
+        }
+        
         addTableToResults({ tableData, maxColumns }, dateKey);
 
         moneyDatas = analyzeDataForCharge(splitData, dateKey, moneyDatas);
@@ -234,6 +324,7 @@ async function processAllImages() {
       updateUserSelect();
       return moneyDatas;
     }
+    
     resultsContainer.innerHTML = "<p>Không có dữ liệu để hiển thị.</p>";
     return;
   } catch (error) {
@@ -273,6 +364,30 @@ async function analyzeImage(base64Images) {
 
   if (!response.ok) {
     throw new Error("API request failed");
+  }
+
+  return await response.json();
+}
+
+// Gọi API Python để phân tích ảnh (sử dụng form-data)
+async function analyzeImagePython(files) {
+  const formData = new FormData();
+  
+  // Thêm tất cả các file vào FormData
+  for (const [fileId, file] of files) {
+    formData.append("files", file);
+  }
+
+  const response = await fetch(`${API_ENDPOINT_PYTHON}`, {
+    method: "POST",
+    headers: {
+      Accept: "application/json",
+    },
+    body: formData,
+  });
+
+  if (!response.ok) {
+    throw new Error("Python API request failed");
   }
 
   return await response.json();
